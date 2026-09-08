@@ -1,46 +1,52 @@
-//React and react-Router-Dom
 import React from "react";
 import { NavLink } from "react-router-dom";
-
-//Componente
 import { ToogleButton } from "../SideNav/SideDrawer/ToogleButton";
-//Images
 import { NavBtn } from "./NavBtn";
-
 import nasa from "../../../Assets/nasa.png";
 
 export const NavBar = ({ isOpen, openHandler }) => {
   return (
-    <>
-      <header className="flex w-full h-[80px] shadow-lg shadow-white bg-[#010f24] top-0 sticky">
-        <nav className="w-full flex justify-between">
-          <div className="flex justify-between  w-full m-auto md:justify-start md:m-auto ">
-            {!isOpen ? (
-              <div className="flex items-center mx-7  md:hidden">
-                <ToogleButton openHandler={openHandler} />
-              </div>
-            ) : null}
-            <div className="flex  w-16 h-16 mr-8 lg:ml-8">
-              {!isOpen ? (
-                <NavLink className="flex items-center" to={"/"}>
-                  <img src={nasa} alt="navlogo" />
-                </NavLink>
-              ) : null}
+    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-slate-950/85 border-b border-slate-800/80 transition-colors duration-200">
+      <nav
+        aria-label="Navegación principal"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between"
+      >
+        {/* Brand / Logo */}
+        <div className="flex items-center space-x-3">
+          <NavLink
+            to="/"
+            className="flex items-center space-x-3 group focus:outline-none focus:ring-2 focus:ring-cyan-400/50 rounded-lg p-1"
+          >
+            <img
+              src={nasa}
+              alt="NASA Logo"
+              className="w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(6,182,212,0.3)] transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="flex flex-col">
+              <span className="font-bold text-lg tracking-wider text-white group-hover:text-cyan-300 transition-colors">
+                NASA APOD
+              </span>
+              <span className="text-xs text-slate-400 hidden sm:inline">
+                Astronomy Picture of the Day
+              </span>
             </div>
-          </div>
- 
-          <div className="hidden w-full md:flex md:text-yellow-300 md:items-center md:mr-6 md:w-1/2 lg:w-1/3 md:justify-center md:font-bold md:text-lg">
-            <ul className="flex w-full justify-around">
-              <li className="w-1/2">
-                <NavBtn path={"/apod"}>A.P.O.D</NavBtn>
-              </li>
-              <li className="w-1/2">
-                <NavBtn path={"/about"}>ABOUT</NavBtn>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </header>
-    </>
+          </NavLink>
+        </div>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex md:items-center md:space-x-2">
+          <NavBtn path="/">Inicio</NavBtn>
+          <NavBtn path="/apod">A.P.O.D</NavBtn>
+          <NavBtn path="/gallery">Galería</NavBtn>
+          <NavBtn path="/about">Acerca de</NavBtn>
+        </div>
+
+        {/* Mobile menu button */}
+        <div className="flex items-center md:hidden">
+          <ToogleButton isOpen={isOpen} openHandler={openHandler} />
+        </div>
+      </nav>
+    </header>
   );
 };
+

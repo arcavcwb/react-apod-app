@@ -1,18 +1,21 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-export const NavBtn = ({ children, path }) => {
+export const NavBtn = ({ children, path, onClick, className = "" }) => {
   return (
     <NavLink
       to={path}
-      className={({ isActive }) => (isActive ? "bg-black" : undefined)}
+      onClick={onClick}
+      className={({ isActive }) =>
+        `inline-flex items-center justify-center min-h-[48px] px-5 py-2.5 rounded-lg text-sm tracking-wide transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
+          isActive
+            ? "text-cyan-300 bg-cyan-950/60 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)] font-semibold"
+            : "text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent font-medium"
+        } ${className}`
+      }
     >
-      <div
-        className="bg-red-700 w-11/12 h-12 border border-solid shadow-md shadow-white border-yellow-200
-      hover:bg-white hover:text-red-500 hover:border-red-500 hover:shadow-md hover:shadow-red-500 m-auto flex items-center justify-center"
-      >
-        {children}
-      </div>
+      {children}
     </NavLink>
   );
 };
+
