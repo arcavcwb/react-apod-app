@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchApodByDate } from '../services/nasa.service';
 import { ApodItem } from '../contracts/apod.contract';
 import { ProgressiveImage } from '../Components/Media/ProgressiveImage';
@@ -10,6 +10,7 @@ import {
   BiShuffle,
   BiCopyright,
   BiInfoCircle,
+  BiShieldQuarter,
 } from 'react-icons/bi';
 
 function getTodayString(): string {
@@ -30,40 +31,50 @@ export const Apod: React.FC = () => {
   const [data, setData] = useState<ApodItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
-  const loadApod = useCallback(async (dateToFetch?: string) => {
-    setLoading(true);
-    setError(null);
-    const target = dateToFetch || selectedDate;
-    const response = await fetchApodByDate(target === today ? undefined : target);
-    if (response.error) {
-      setError(response.error);
-      setData(null);
-    } else {
-      setData(response.data);
-      if (response.data?.date) {
-        setSelectedDate(response.data.date);
-      }
-    }
-    setLoading(false);
-  }, [selectedDate, today]);
+  const [isFallback, setIsFallback] = useState<boolean>(false);
 
   useEffect(() => {
-    loadApod();
-  }, [loadApod]);
+    let isCancelled = false;
+
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+      const res = await fetchApodByDate(selectedDate === today ? undefined : selectedDate);
+      if (isCancelled) return;
+
+      if (res.error) {
+        setError(res.error);
+        setData(null);
+        setIsFallback(false);
+      } else {
+        setData(res.data);
+        setIsFallback(!!res.isFallback);
+      }
+      setLoading(false);
+    }
+
+    loadData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedDate, today]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = e.target.value;
-    setSelectedDate(newDate);
+    setSelectedDate(e.target.value);
   };
 
   const handleRandomDate = () => {
-    const randomDate = getRandomDateString();
-    setSelectedDate(randomDate);
+    setSelectedDate(getRandomDateString());
   };
 
   const handleToday = () => {
     setSelectedDate(today);
+  };
+
+  const handleManualRetry = () => {
+    // Forzar re-ejecución refrescando la fecha actual
+    setSelectedDate((prev) => (prev === today ? today : prev));
   };
 
   return (
@@ -106,13 +117,23 @@ export const Apod: React.FC = () => {
           <button
             type="button"
             onClick={handleRandomDate}
-            className="min-h-[48px] px-4 py-2 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/30 text-xs font-semibold text-cyan-300 inline-flex items-center space-x-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+            className="min-h-[48px] px-4 py-2 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/30 text-xs font-semibold text-cyan-300 inline-flex items-center space-x-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
           >
             <BiShuffle className="w-4 h-4" />
             <span>Aleatoria</span>
           </button>
         </div>
       </section>
+
+      {/* Banner Informativo de Resiliencia / Fallback */}
+      {isFallback && !loading && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-amber-200 flex items-center space-x-3 text-xs sm:text-sm">
+          <BiShieldQuarter className="w-5 h-5 text-amber-400 flex-shrink-0" />
+          <p>
+            <strong className="font-semibold text-amber-300">Modo Resiliencia:</strong> Debido a la alta demanda o límite de cuota en los servidores de la NASA, se está sirviendo una observación de alta fidelidad desde el catálogo de respaldo curado.
+          </p>
+        </div>
+      )}
 
       {/* Estado de Carga */}
       <Spinner loading={loading} />
@@ -127,7 +148,7 @@ export const Apod: React.FC = () => {
           <p className="text-sm text-slate-300 max-w-md">{error}</p>
           <button
             type="button"
-            onClick={() => loadApod()}
+            onClick={handleManualRetry}
             className="min-h-[48px] px-6 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 inline-flex items-center space-x-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
           >
             <BiRefresh className="w-4 h-4" />
@@ -167,6 +188,7 @@ export const Apod: React.FC = () => {
                   alt={data.title}
                   aspectRatio="aspect-video"
                   priority={true}
+                  fallbackSrc={data.hdurl || undefined}
                   className="shadow-2xl"
                 />
                 {data.hdurl && (
