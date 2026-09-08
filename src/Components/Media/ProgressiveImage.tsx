@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BiImageAlt, BiRefresh } from 'react-icons/bi';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 
 interface ProgressiveImageProps {
   src: string;
@@ -8,6 +9,7 @@ interface ProgressiveImageProps {
   priority?: boolean;
   className?: string;
   fallbackSrc?: string;
+  optimizedWidth?: number;
   onClick?: () => void;
 }
 
@@ -18,20 +20,25 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   priority = false,
   className = '',
   fallbackSrc,
+  optimizedWidth,
   onClick,
 }) => {
-  const [currentSrc, setCurrentSrc] = useState<string>(src);
+  const targetWidth = optimizedWidth || (priority ? 1200 : 600);
+  const initialSrc = getOptimizedImageUrl(src, { width: targetWidth });
+
+  const [currentSrc, setCurrentSrc] = useState<string>(initialSrc);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
 
-  // Sincronizar estado cuando la prop src cambie (e.g. selección de nueva fecha o cambio de tarjeta)
+  // Sincronizar estado cuando la prop src cambie
   useEffect(() => {
-    setCurrentSrc(src);
+    const optimized = getOptimizedImageUrl(src, { width: targetWidth });
+    setCurrentSrc(optimized);
     setLoaded(false);
     setError(false);
     setRetryCount(0);
-  }, [src]);
+  }, [src, targetWidth]);
 
   const handleRetry = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -41,16 +48,16 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       setCurrentSrc(fallbackSrc);
     } else {
       setRetryCount((prev) => prev + 1);
-      // Forzar recarga con cache-busting si persiste el fallo
       setCurrentSrc(`${src}${src.includes('?') ? '&' : '?'}retry=${Date.now()}`);
     }
   };
 
   const handleImageError = () => {
-    if (fallbackSrc && currentSrc !== fallbackSrc) {
+    // Si la versión optimizada por CDN falla, degradar transparentemente a la URL original
+    if (currentSrc !== src) {
+      setCurrentSrc(src);
+    } else if (fallbackSrc && currentSrc !== fallbackSrc) {
       setCurrentSrc(fallbackSrc);
-      setError(false);
-      setLoaded(false);
     } else {
       setError(true);
     }

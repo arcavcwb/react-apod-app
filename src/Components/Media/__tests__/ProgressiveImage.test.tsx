@@ -17,12 +17,17 @@ describe('ProgressiveImage Component', () => {
     expect(screen.queryByText(/cargando medio astronómico/i)).toBeNull();
   });
 
-  it('displays error recovery ui on image error', () => {
+  it('degrades to raw source on cdn error, and shows recovery UI if raw source also fails', () => {
     render(<ProgressiveImage src="https://example.com/broken.jpg" alt="Broken" />);
 
     const img = screen.getByAltText('Broken');
-    fireEvent.error(img);
 
+    // 1er fallo: conmuta a la URL original sin optimizador
+    fireEvent.error(img);
+    expect(img.getAttribute('src')).toBe('https://example.com/broken.jpg');
+
+    // 2do fallo: si la URL original tampoco responde, muestra UI de recuperación
+    fireEvent.error(img);
     expect(screen.getByText(/no se pudo cargar la imagen astronómica/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /reintentar carga/i })).toBeTruthy();
   });

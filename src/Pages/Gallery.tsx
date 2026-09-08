@@ -108,7 +108,7 @@ export const Gallery: React.FC = () => {
                 <article
                   key={`${item.date}-${idx}`}
                   onClick={() => setSelectedItem(item)}
-                  className="group rounded-2xl border border-slate-800/80 bg-slate-900/40 overflow-hidden backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/40 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(6,182,212,0.1)] cursor-pointer flex flex-col"
+                  className="group rounded-2xl border border-slate-800/80 bg-slate-900/90 overflow-hidden transition-all duration-300 hover:border-cyan-500/40 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(6,182,212,0.1)] cursor-pointer flex flex-col"
                 >
                   <div className="relative overflow-hidden">
                     <ProgressiveImage
