@@ -1,15 +1,14 @@
-//React
 import React from "react";
 
-//CSS
+export const BackDrop = ({ isOpen, openHandler }) => {
+  if (!isOpen) return null;
 
-export const BackDrop = ({ isOpen }) => {
   return (
     <div
-      className={`fixed w-full h-full top-0 left-0 backdrop-blur-sm  ${
-        !isOpen ? "hidden" : null
-      }`}
-      onClick={() => isOpen}
+      className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm transition-opacity duration-300"
+      onClick={openHandler}
+      aria-hidden="true"
     />
   );
 };
+

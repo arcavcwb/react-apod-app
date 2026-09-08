@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import {Home  } from "../Home";
+import { BrowserRouter } from "react-router-dom";
+import { Home } from "../Home";
 
-test("Home sholud be render", () => {
-  render(<Home />);
+test("Home should be render", () => {
+  render(
+    <BrowserRouter>
+      <Home />
+    </BrowserRouter>
+  );
 });
