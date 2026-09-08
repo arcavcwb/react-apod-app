@@ -1,0 +1,17 @@
+[build]
+  command = "pnpm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[images]
+  remote_images = [
+    "https://api.nasa.gov/.*",
+    "https://apod.nasa.gov/.*",
+    "https://images-assets.nasa.gov/.*",
+    "https://img.youtube.com/.*",
+    "https://.*\\.nasa\\.gov/.*"
+  ]
