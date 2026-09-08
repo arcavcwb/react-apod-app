@@ -1,6 +1,11 @@
 import React from "react";
 
-export const BackDrop = ({ isOpen, openHandler }) => {
+interface BackDropProps {
+  isOpen: boolean;
+  openHandler: () => void;
+}
+
+export const BackDrop: React.FC<BackDropProps> = ({ isOpen, openHandler }) => {
   if (!isOpen) return null;
 
   return (
@@ -11,4 +16,3 @@ export const BackDrop = ({ isOpen, openHandler }) => {
     />
   );
 };
-
