@@ -1,7 +1,14 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-export const NavBtn = ({ children, path, onClick, className = "" }) => {
+interface NavBtnProps {
+  children: React.ReactNode;
+  path: string;
+  onClick?: () => void;
+  className?: string;
+}
+
+export const NavBtn: React.FC<NavBtnProps> = ({ children, path, onClick, className = "" }) => {
   return (
     <NavLink
       to={path}
@@ -18,4 +25,3 @@ export const NavBtn = ({ children, path, onClick, className = "" }) => {
     </NavLink>
   );
 };
-

@@ -4,7 +4,12 @@ import { ToogleButton } from "../SideNav/SideDrawer/ToogleButton";
 import { NavBtn } from "./NavBtn";
 import nasa from "../../../Assets/nasa.png";
 
-export const NavBar = ({ isOpen, openHandler }) => {
+interface NavBarProps {
+  isOpen: boolean;
+  openHandler: () => void;
+}
+
+export const NavBar: React.FC<NavBarProps> = ({ isOpen, openHandler }) => {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-slate-950/85 border-b border-slate-800/80 transition-colors duration-200">
       <nav
@@ -49,4 +54,3 @@ export const NavBar = ({ isOpen, openHandler }) => {
     </header>
   );
 };
-

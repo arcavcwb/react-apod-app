@@ -1,7 +1,13 @@
 import React from "react";
 import { BiMenu, BiX } from "react-icons/bi";
 
-export const ToogleButton = ({ isOpen, openHandler, className = "" }) => {
+interface ToogleButtonProps {
+  isOpen: boolean;
+  openHandler: () => void;
+  className?: string;
+}
+
+export const ToogleButton: React.FC<ToogleButtonProps> = ({ isOpen, openHandler, className = "" }) => {
   return (
     <button
       type="button"
@@ -18,4 +24,3 @@ export const ToogleButton = ({ isOpen, openHandler, className = "" }) => {
     </button>
   );
 };
-

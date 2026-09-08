@@ -3,7 +3,12 @@ import { ToogleButton } from "./ToogleButton";
 import { NavBtn } from "../../Navbar/NavBtn";
 import nasa from "../../../../Assets/nasa.png";
 
-export const SideDrawer = ({ isOpen, openHandler }) => {
+interface SideDrawerProps {
+  isOpen: boolean;
+  openHandler: () => void;
+}
+
+export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, openHandler }) => {
   return (
     <aside
       aria-label="Navegación móvil"
@@ -57,4 +62,3 @@ export const SideDrawer = ({ isOpen, openHandler }) => {
     </aside>
   );
 };
-

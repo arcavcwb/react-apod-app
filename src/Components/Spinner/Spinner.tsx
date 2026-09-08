@@ -1,6 +1,10 @@
 import React from "react";
 
-export const Spinner = ({ loading }) => {
+interface SpinnerProps {
+  loading: boolean;
+}
+
+export const Spinner: React.FC<SpinnerProps> = ({ loading }) => {
   if (!loading) return null;
 
   return (
@@ -16,4 +20,3 @@ export const Spinner = ({ loading }) => {
     </div>
   );
 };
-

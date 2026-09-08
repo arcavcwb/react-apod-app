@@ -4,7 +4,13 @@ import { NavBar } from "./Navbar/NavBar";
 import { SideDrawer } from "./SideNav/SideDrawer/SideDrawer";
 import { BackDrop } from "./SideNav/BackDrop/BackDrop";
 
-export const Layout = ({ isOpen, openHandler, children }) => {
+interface LayoutProps {
+  isOpen: boolean;
+  openHandler: () => void;
+  children: React.ReactNode;
+}
+
+export const Layout: React.FC<LayoutProps> = ({ isOpen, openHandler, children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans antialiased">
       <NavBar isOpen={isOpen} openHandler={openHandler} />
@@ -17,4 +23,3 @@ export const Layout = ({ isOpen, openHandler, children }) => {
     </div>
   );
 };
-

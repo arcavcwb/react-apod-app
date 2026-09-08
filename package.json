@@ -2,21 +2,23 @@
   "name": "apod-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "axios": "^1.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.7.1",
     "react-router-dom": "^6.4.2",
-    "react-scripts": "^5.0.0",
-    "react-share": "^4.4.1"
+    "react-share": "^4.4.1",
+    "zod": "^4.5.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --detectOpenHandles --forceExit",
-    "eject": "react-scripts eject",
-    "check:design": ".agents/skills/impeccable/scripts/impeccable detect"
+    "dev": "vite",
+    "start": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "check:design": ".agents/skills/impeccable/scripts/impeccable detect src"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -37,8 +39,16 @@
     "@testing-library/dom": "^8.20.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
+    "@types/node": "^26.5.0",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.4.12",
+    "jsdom": "^30.0.1",
     "postcss": "^8.4.18",
-    "tailwindcss": "^3.2.0"
+    "tailwindcss": "^3.2.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
   }
 }
