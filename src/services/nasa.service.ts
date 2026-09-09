@@ -2,7 +2,9 @@ import { ApodItem, ApodItemSchema, ApodGallery, ApodGallerySchema } from '../con
 import { getCuratedApod, getCuratedGallery } from './curatedApod';
 
 const NASA_BASE_URL = 'https://api.nasa.gov/planetary/apod';
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 4000; // Fail-fast a 4s para evitar bloqueos prolongados
+const CIRCUIT_BREAKER_KEY = 'nasa_circuit_breaker_until';
+const CIRCUIT_BREAKER_DURATION_MS = 10 * 60 * 1000; // 10 minutos de protección ante 429
 
 function getApiKey(): string {
   const envKey = import.meta.env.VITE_NASA_API_KEY;
@@ -20,6 +22,38 @@ export interface ApiResponse<T> {
 }
 
 // -------------------------------------------------------------
+// Circuit Breaker (Cero Esperas ante Cuota 429 de NASA)
+// -------------------------------------------------------------
+export function isCircuitBreakerOpen(): boolean {
+  try {
+    const raw = sessionStorage.getItem(CIRCUIT_BREAKER_KEY);
+    if (!raw) return false;
+    const until = parseInt(raw, 10);
+    if (Date.now() < until) return true;
+    sessionStorage.removeItem(CIRCUIT_BREAKER_KEY);
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export function tripCircuitBreaker(): void {
+  try {
+    sessionStorage.setItem(CIRCUIT_BREAKER_KEY, (Date.now() + CIRCUIT_BREAKER_DURATION_MS).toString());
+  } catch {
+    // Ignorar si sessionStorage no está disponible
+  }
+}
+
+export function resetCircuitBreaker(): void {
+  try {
+    sessionStorage.removeItem(CIRCUIT_BREAKER_KEY);
+  } catch {
+    // Ignorar si sessionStorage no está disponible
+  }
+}
+
+// -------------------------------------------------------------
 // Utilidades de Caché en Cliente (localStorage)
 // -------------------------------------------------------------
 interface CacheEnvelope<T> {
@@ -29,7 +63,7 @@ interface CacheEnvelope<T> {
 }
 
 function getCacheKey(prefix: string, id: string): string {
-  return `apod_cache_v1_${prefix}_${id}`;
+  return `apod_cache_v2_${prefix}_${id}`;
 }
 
 function readCache<T>(key: string): T | null {
@@ -78,20 +112,29 @@ export function getMediaThumbnail(item: ApodItem): string {
 /**
  * Obtiene la Imagen Astronómica del Día de hoy con caché y fallback
  */
-export async function fetchTodayApod(): Promise<ApiResponse<ApodItem>> {
-  return fetchApodByDate();
+export async function fetchTodayApod(forceRefresh = false): Promise<ApiResponse<ApodItem>> {
+  return fetchApodByDate(undefined, forceRefresh);
 }
 
 /**
  * Obtiene la Imagen Astronómica del Día para una fecha específica (YYYY-MM-DD).
- * Aplica estrategia de caché inmutable para fechas históricas y fallback curado
- * si la cuota de la NASA está saturada (HTTP 429) o la conexión falla.
+ * Con Circuit Breaker: si la API de NASA está en 429, responde inmediatamente (0ms)
+ * con el catálogo de respaldo curado, eliminando esperas y spinners congelados.
  */
-export async function fetchApodByDate(date?: string): Promise<ApiResponse<ApodItem>> {
+export async function fetchApodByDate(date?: string, forceRefresh = false): Promise<ApiResponse<ApodItem>> {
   const isSpecificDate = !!date;
   const cacheKey = getCacheKey('item', date || 'today');
 
-  // 1. Verificar Caché en Cliente
+  if (forceRefresh) {
+    resetCircuitBreaker();
+    try {
+      localStorage.removeItem(cacheKey);
+    } catch {
+      // ignore
+    }
+  }
+
+  // 1. Verificar Caché en Cliente (Respuesta en 0ms)
   const cached = readCache<ApodItem>(cacheKey);
   if (cached) {
     const parsed = ApodItemSchema.safeParse(cached);
@@ -100,7 +143,18 @@ export async function fetchApodByDate(date?: string): Promise<ApiResponse<ApodIt
     }
   }
 
-  // 2. Preparar Petición con AbortController para prevenir cuelgues
+  // 2. Circuit Breaker activo: responder inmediatamente sin hacer llamada de red
+  if (isCircuitBreakerOpen() && !forceRefresh) {
+    const fallbackItem = getCuratedApod(date);
+    return {
+      data: fallbackItem,
+      error: null,
+      isRateLimited: true,
+      isFallback: true,
+    };
+  }
+
+  // 3. Preparar Petición con AbortController fail-fast (4s)
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -118,8 +172,9 @@ export async function fetchApodByDate(date?: string): Promise<ApiResponse<ApodIt
     clearTimeout(timeoutId);
 
     if (response.status === 429) {
-      console.warn('[NASA Service] Rate limit 429 excedido. Activando catálogo de respaldo.');
+      tripCircuitBreaker();
       const fallbackItem = getCuratedApod(date);
+      writeCache(cacheKey, fallbackItem, 10 * 60 * 1000);
       return {
         data: fallbackItem,
         error: null,
@@ -129,9 +184,6 @@ export async function fetchApodByDate(date?: string): Promise<ApiResponse<ApodIt
     }
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const msg = errorData?.error?.message || errorData?.msg || `Error de NASA API: ${response.status}`;
-      console.warn('[NASA Service] Error en respuesta remota:', msg);
       const fallbackItem = getCuratedApod(date);
       return {
         data: fallbackItem,
@@ -152,33 +204,54 @@ export async function fetchApodByDate(date?: string): Promise<ApiResponse<ApodIt
     // Fechas históricas se cachean permanentemente; la de hoy por 6 horas
     writeCache(cacheKey, result.data, isSpecificDate ? 0 : 6 * 60 * 60 * 1000);
     return { data: result.data, error: null, isFallback: false };
-  } catch (err: unknown) {
+  } catch {
     clearTimeout(timeoutId);
-    console.warn('[NASA Service] Red no disponible o timeout alcanzado. Utilizando respaldo astronómico.', err);
+    tripCircuitBreaker();
     const fallbackItem = getCuratedApod(date);
+    writeCache(cacheKey, fallbackItem, 10 * 60 * 1000);
     return {
       data: fallbackItem,
       error: null,
       isFallback: true,
+      isRateLimited: true,
     };
   }
 }
 
 /**
  * Obtiene una colección aleatoria de imágenes espaciales para la galería.
- * Si la API de NASA excede la cuota (429) o agota el tiempo de espera,
- * conmuta inmediatamente a la colección curada sin dejar la UI en blanco.
+ * Si el Circuit Breaker está abierto o la NASA responde con 429/timeout,
+ * responde en 0ms con la colección curada sin congelar la interfaz.
  */
-export async function fetchRandomApods(count: number = 12): Promise<ApiResponse<ApodGallery>> {
+export async function fetchRandomApods(count: number = 12, forceRefresh = false): Promise<ApiResponse<ApodGallery>> {
   const cacheKey = getCacheKey('gallery', `count_${count}`);
 
-  // 1. Revisar caché de galería de corta duración (30 minutos)
+  if (forceRefresh) {
+    resetCircuitBreaker();
+    try {
+      localStorage.removeItem(cacheKey);
+    } catch {
+      // ignore
+    }
+  }
+
+  // 1. Revisar caché de galería (0ms)
   const cached = readCache<ApodGallery>(cacheKey);
   if (cached && Array.isArray(cached) && cached.length > 0) {
     const parsed = ApodGallerySchema.safeParse(cached);
     if (parsed.success) {
       return { data: parsed.data, error: null, isFallback: false };
     }
+  }
+
+  // 2. Circuit Breaker activo: responder inmediatamente sin red
+  if (isCircuitBreakerOpen() && !forceRefresh) {
+    return {
+      data: getCuratedGallery(count),
+      error: null,
+      isRateLimited: true,
+      isFallback: true,
+    };
   }
 
   const controller = new AbortController();
@@ -196,9 +269,11 @@ export async function fetchRandomApods(count: number = 12): Promise<ApiResponse<
     clearTimeout(timeoutId);
 
     if (response.status === 429) {
-      console.warn('[NASA Gallery] Cuota 429 excedida. Conmutando a catálogo curado.');
+      tripCircuitBreaker();
+      const fallbackGallery = getCuratedGallery(count);
+      writeCache(cacheKey, fallbackGallery, 10 * 60 * 1000);
       return {
-        data: getCuratedGallery(count),
+        data: fallbackGallery,
         error: null,
         isRateLimited: true,
         isFallback: true,
@@ -206,9 +281,9 @@ export async function fetchRandomApods(count: number = 12): Promise<ApiResponse<
     }
 
     if (!response.ok) {
-      console.warn('[NASA Gallery] Respuesta no exitosa:', response.status);
+      const fallbackGallery = getCuratedGallery(count);
       return {
-        data: getCuratedGallery(count),
+        data: fallbackGallery,
         error: null,
         isFallback: true,
       };
@@ -229,13 +304,16 @@ export async function fetchRandomApods(count: number = 12): Promise<ApiResponse<
     // Cachear resultado exitoso por 30 minutos
     writeCache(cacheKey, result.data, 30 * 60 * 1000);
     return { data: result.data, error: null, isFallback: false };
-  } catch (err: unknown) {
+  } catch {
     clearTimeout(timeoutId);
-    console.warn('[NASA Gallery] Fallo de red o timeout. Conmutando a catálogo curado.');
+    tripCircuitBreaker();
+    const fallbackGallery = getCuratedGallery(count);
+    writeCache(cacheKey, fallbackGallery, 10 * 60 * 1000);
     return {
-      data: getCuratedGallery(count),
+      data: fallbackGallery,
       error: null,
       isFallback: true,
+      isRateLimited: true,
     };
   }
 }

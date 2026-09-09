@@ -23,10 +23,10 @@ export const Gallery: React.FC = () => {
   const [isFallback, setIsFallback] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<ApodItem | null>(null);
 
-  const loadGallery = useCallback(async () => {
+  const loadGallery = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     setError(null);
-    const res = await fetchRandomApods(12);
+    const res = await fetchRandomApods(12, forceRefresh);
     if (res.error) {
       setError(res.error);
     } else if (res.data) {
@@ -87,7 +87,7 @@ export const Gallery: React.FC = () => {
           <p className="text-sm text-slate-300 max-w-md">{error}</p>
           <button
             type="button"
-            onClick={loadGallery}
+            onClick={() => loadGallery(true)}
             className="min-h-[48px] px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 inline-flex items-center space-x-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
           >
             <BiRefresh className="w-4 h-4" />
