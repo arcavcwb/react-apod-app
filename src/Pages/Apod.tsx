@@ -72,9 +72,19 @@ export const Apod: React.FC = () => {
     setSelectedDate(today);
   };
 
-  const handleManualRetry = () => {
-    // Forzar re-ejecución refrescando la fecha actual
-    setSelectedDate((prev) => (prev === today ? today : prev));
+  const handleManualRetry = async () => {
+    setLoading(true);
+    setError(null);
+    const res = await fetchApodByDate(selectedDate === today ? undefined : selectedDate, true);
+    if (res.error) {
+      setError(res.error);
+      setData(null);
+      setIsFallback(false);
+    } else {
+      setData(res.data);
+      setIsFallback(!!res.isFallback);
+    }
+    setLoading(false);
   };
 
   return (
