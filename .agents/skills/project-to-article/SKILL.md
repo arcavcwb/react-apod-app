@@ -1,387 +1,534 @@
 ---
 name: project-to-article
-description: Redacta artículos de alta calidad basados en la información, documentación, código, decisiones y resultados de un proyecto. Convierte material técnico o de producto en contenido claro, estructurado y publicable, sin inventar información.
+description: Redacta artículos técnicos, de producto y casos de estudio basados en un proyecto existente. Analiza automáticamente documentación, código, configuración y archivos relevantes del proyecto para convertirlos en contenido claro, estructurado y publicable, sin inventar información.
 ---
 
 # Project to Article
 
-## Propósito
+## Objetivo
 
-Este skill transforma la información disponible de un proyecto en artículos completos, claros y publicables.
+Esta skill convierte la información existente dentro de un proyecto en artículos de alta calidad.
 
-El proyecto puede contener:
+Debe analizar el proyecto antes de escribir y utilizar la información encontrada como fuente principal.
 
-- README
-- documentación técnica
-- PRD
-- especificaciones
-- tickets
-- issues
-- código fuente
-- decisiones de arquitectura
-- documentación de API
-- diseños
-- capturas
-- notas internas
-- métricas
-- resultados
-- changelogs
-- documentación de producto
-- conversaciones relacionadas con el proyecto
+El objetivo no es simplemente resumir archivos.
 
-El objetivo es convertir ese material en una narrativa comprensible para la audiencia indicada, manteniendo fidelidad a la información disponible.
+El objetivo es construir una narrativa que explique:
+
+> qué problema existía → qué se decidió hacer → cómo se construyó → por qué se tomaron determinadas decisiones → qué resultado tuvo → qué se aprendió
+
+La información debe mantenerse fiel al proyecto.
+
+Nunca inventes datos para hacer que el artículo parezca más completo.
 
 ---
 
-# Principios fundamentales
+# Cuándo utilizar esta skill
 
-## 1. No inventar información
+Utiliza esta skill cuando el usuario solicite cosas como:
 
-Nunca inventes:
+* "escribe un artículo sobre este proyecto"
+* "crea un case study"
+* "haz un artículo técnico"
+* "convierte este proyecto en un artículo"
+* "documenta este proyecto como un artículo"
+* "escribe un post para el blog"
+* "crea un technical blog post"
+* "explica cómo construimos esto"
+* "haz un artículo basado en el proyecto"
+* "documenta la arquitectura"
+* "crea una historia sobre este proyecto"
 
-- funcionalidades
-- métricas
-- resultados
-- tecnologías
-- fechas
-- nombres
-- decisiones técnicas
-- usuarios
-- clientes
-- problemas
-- resultados comerciales
-- benchmarks
-- cifras
-- citas
-- opiniones atribuidas a personas
-
-Si una afirmación no puede ser respaldada por la información disponible, no la presentes como un hecho.
-
-Cuando una información importante esté ausente, utiliza:
-
-> [Dato pendiente de confirmar]
-
-o formula una pregunta antes de generar la versión final si el dato es indispensable.
+También puedes utilizarla cuando el usuario proporcione documentación y solicite convertirla en contenido editorial.
 
 ---
 
-## 2. Separar hechos de interpretación
+# Regla principal
 
-Distingue entre:
+## Primero investigar. Después escribir.
 
-### Hechos
+Nunca comiences redactando el artículo inmediatamente.
 
-Información explícitamente presente en el proyecto.
+Primero debes entender el proyecto.
 
-Ejemplo:
+El flujo obligatorio es:
 
-> El proyecto utiliza Next.js y PostgreSQL.
-
-### Inferencias
-
-Conclusiones razonables derivadas de la información.
-
-Ejemplo:
-
-> La elección de PostgreSQL parece estar relacionada con la necesidad de manejar datos relacionales.
-
-Las inferencias deben identificarse como tales y nunca presentarse como decisiones confirmadas.
-
-### Recomendaciones
-
-Ideas propuestas por el modelo.
-
-Ejemplo:
-
-> Una posible mejora futura sería incorporar caching.
-
-No presentes recomendaciones como funcionalidades existentes.
+1. Inspeccionar el proyecto.
+2. Identificar las fuentes relevantes.
+3. Extraer información.
+4. Construir un modelo mental del proyecto.
+5. Identificar hechos, inferencias y datos faltantes.
+6. Definir la narrativa.
+7. Elegir la estructura.
+8. Redactar.
+9. Revisar factualidad.
+10. Entregar el artículo.
 
 ---
 
-# Flujo de trabajo
+# 1. Inspección del proyecto
 
-## Paso 1 — Entender el proyecto
+Antes de redactar, inspecciona la estructura del proyecto.
 
-Antes de escribir el artículo, identifica:
+Busca especialmente:
 
-- Qué es el proyecto
-- Qué problema intenta resolver
-- Para quién está construido
-- Cuál es su objetivo
-- Qué funcionalidades tiene
-- Qué tecnologías utiliza
-- Cómo está estructurado
-- Qué decisiones importantes se tomaron
-- Qué dificultades aparecen documentadas
-- Qué resultados están disponibles
-- Qué información falta
+* README
+* documentación
+* `/docs`
+* `/documentation`
+* `/design`
+* `/src`
+* `/app`
+* `/components`
+* `/api`
+* `/server`
+* `/backend`
+* `/frontend`
+* `/tests`
+* `/config`
+* archivos de configuración
+* package.json
+* pnpm-lock.yaml
+* yarn.lock
+* package-lock.json
+* requirements.txt
+* pyproject.toml
+* Cargo.toml
+* go.mod
+* Dockerfile
+* docker-compose
+* CI/CD
+* GitHub Actions
+* changelog
+* ADRs
+* issues
+* especificaciones
+* PRDs
+* archivos Markdown
 
-Construye internamente un modelo del proyecto antes de redactar.
+No es necesario leer todos los archivos.
+
+Prioriza los archivos que permitan entender:
+
+* propósito
+* arquitectura
+* decisiones
+* funcionamiento
+* problemas
+* resultados
 
 ---
 
-# Paso 2 — Crear un inventario de información
+# 2. Descubrimiento de información
 
-Clasifica la información encontrada.
+Identifica las fuentes disponibles.
 
-## Contexto
+Clasifícalas como:
 
-- Nombre del proyecto
-- Organización o equipo
-- Situación inicial
-- Problema
-- Motivación
+### Fuente primaria
 
-## Producto
+Información directamente relacionada con la implementación actual.
 
-- Qué hace
-- Usuarios
-- Casos de uso
-- Funcionalidades
-- Flujo principal
+Ejemplos:
+
+* código actual
+* README actual
+* configuración actual
+* documentación oficial del proyecto
+
+### Fuente secundaria
+
+Información útil pero potencialmente desactualizada.
+
+Ejemplos:
+
+* issues
+* changelogs
+* documentación antigua
+* notas internas
+
+### Fuente contextual
+
+Información que ayuda a comprender el contexto.
+
+Ejemplos:
+
+* PRD
+* documentación de negocio
+* notas de reuniones
+* briefs
+* investigación
+
+Cuando exista contradicción entre fuentes, prioriza la información más actual y directamente verificable.
+
+---
+
+# 3. Construir el modelo del proyecto
+
+Antes de escribir, identifica internamente:
+
+## Identidad
+
+* Nombre del proyecto
+* Tipo de proyecto
+* Estado actual
+* Objetivo principal
+
+## Problema
+
+* Qué problema resuelve
+* Para quién
+* Qué situación existía antes
+* Qué limitaciones había
+
+## Solución
+
+* Qué se construyó
+* Qué funcionalidades existen
+* Cómo funciona
+* Qué cambió
 
 ## Tecnología
 
-- Frontend
-- Backend
-- Base de datos
-- APIs
-- Infraestructura
-- Cloud
-- CI/CD
-- Testing
-- Observabilidad
+* Frameworks
+* Lenguajes
+* Base de datos
+* APIs
+* servicios externos
+* infraestructura
+* deployment
+* testing
+* observabilidad
 
 ## Arquitectura
 
-- Componentes
-- Servicios
-- Dependencias
-- Flujo de datos
-- Integraciones
-- Decisiones arquitectónicas
+* componentes
+* servicios
+* relaciones
+* flujo de datos
+* integraciones
+* dependencias
 
 ## Proceso
 
-- Cómo se desarrolló
-- Iteraciones
-- Problemas encontrados
-- Soluciones
-- Trade-offs
-- Decisiones
+* cómo evolucionó
+* iteraciones
+* problemas
+* soluciones
+* decisiones
 
 ## Resultados
 
-- Métricas
-- Performance
-- Adopción
-- Reducción de costos
-- Mejoras
-- Feedback
-- Resultados de negocio
+* métricas
+* performance
+* adopción
+* costos
+* conversiones
+* mejoras
+* feedback
 
 ## Aprendizajes
 
-- Qué funcionó
-- Qué no funcionó
-- Qué se cambiaría
-- Qué principios pueden reutilizarse
+* qué funcionó
+* qué no funcionó
+* decisiones importantes
+* trade-offs
+* mejoras futuras
 
 ---
 
-# Paso 3 — Determinar el tipo de artículo
+# 4. Clasificar la información
 
-Si el usuario especifica el tipo, respetarlo.
+Toda información utilizada en el artículo debe pertenecer a una de estas categorías.
 
-Si no lo especifica, determinar el formato más adecuado.
+## Hecho
 
-Tipos principales:
+Está explícitamente respaldado por el proyecto.
 
-### Artículo técnico
+Ejemplo:
 
-Enfocado en:
+> La aplicación utiliza PostgreSQL.
 
-- arquitectura
-- implementación
-- tecnologías
-- problemas técnicos
-- decisiones
-- código
-- performance
+Puedes presentarlo como afirmación.
 
-### Caso de estudio
+## Inferencia
 
-Estructura:
+Es una conclusión razonable pero no está explícitamente confirmada.
 
-Problema → proceso → solución → resultados → aprendizajes.
+Ejemplo:
 
-### Artículo de producto
+> La estructura del sistema sugiere que PostgreSQL fue elegido para manejar relaciones entre entidades.
 
-Enfocado en:
+Utiliza expresiones como:
 
-- problema del usuario
-- solución
-- experiencia
-- funcionalidades
-- impacto
+* "parece"
+* "sugiere"
+* "probablemente"
+* "una posible razón"
 
-### Postmortem
+Nunca presentes una inferencia como un hecho.
 
-Enfocado en:
+## Recomendación
 
-- qué ocurrió
-- impacto
-- causa
-- resolución
-- aprendizajes
-- prevención
+Es una idea generada por la IA.
 
-### Case study técnico
+Ejemplo:
 
-Combina producto, negocio y arquitectura.
+> Una posible mejora sería agregar caching.
 
-### Tutorial
-
-Enfocado en enseñar cómo reproducir una solución.
-
-No conviertas automáticamente un proyecto en tutorial si no existe suficiente información para reproducirlo.
+No describas recomendaciones como funcionalidades existentes.
 
 ---
 
-# Paso 4 — Identificar la audiencia
+# 5. Prohibición de inventar
 
-Determina quién leerá el artículo.
+Nunca inventes:
 
-Audiencias posibles:
+* métricas
+* estadísticas
+* usuarios
+* clientes
+* ingresos
+* reducción de costos
+* mejoras de performance
+* fechas
+* nombres
+* funcionalidades
+* tecnologías
+* decisiones
+* motivaciones
+* benchmarks
+* resultados
+* citas
+* testimonios
 
-- desarrolladores
-- arquitectos
-- CTOs
-- product managers
-- diseñadores
-- founders
-- usuarios técnicos
-- usuarios no técnicos
-- audiencia general
+Ejemplo incorrecto:
 
-Si el usuario proporciona audiencia, esa indicación tiene prioridad.
+> El nuevo sistema redujo el tiempo de respuesta en un 40%.
 
-Si no existe información suficiente, utilizar una audiencia técnica general y evitar asumir conocimientos demasiado específicos.
+Si el proyecto no contiene ese dato, no lo escribas.
+
+Ejemplo correcto:
+
+> La nueva arquitectura está orientada a mejorar el tiempo de respuesta.
+
+Solo si esto puede respaldarse.
 
 ---
 
-# Paso 5 — Construir la narrativa
+# 6. Información faltante
 
-La narrativa debe responder progresivamente:
+Si falta información importante, no inventarla.
 
-1. ¿Cuál era el problema?
+Utiliza:
+
+> [Dato pendiente de confirmar]
+
+Ejemplos:
+
+> [Confirmar fecha de lanzamiento]
+
+> [Confirmar métrica de performance]
+
+> [Confirmar número de usuarios]
+
+Si el dato es fundamental para la historia, pregunta al usuario antes de presentar una versión final.
+
+Si el dato no es fundamental, continúa y marca el pendiente al final.
+
+---
+
+# 7. Determinar el tipo de artículo
+
+Si el usuario especifica el tipo, respétalo.
+
+Si no lo especifica, determina el formato más adecuado.
+
+## Artículo técnico
+
+Prioridad:
+
+* arquitectura
+* implementación
+* tecnologías
+* decisiones técnicas
+* problemas
+* trade-offs
+* performance
+
+## Case study
+
+Prioridad:
+
+> Problema → proceso → solución → resultado → aprendizaje
+
+## Artículo de producto
+
+Prioridad:
+
+* problema del usuario
+* experiencia
+* solución
+* funcionalidades
+* decisiones
+* impacto
+
+## Postmortem
+
+Prioridad:
+
+* incidente
+* impacto
+* causa
+* resolución
+* prevención
+* aprendizajes
+
+## Tutorial
+
+Prioridad:
+
+* enseñar
+* explicar pasos
+* permitir reproducir la solución
+
+No crear un tutorial si el proyecto no contiene suficiente información para reproducirlo.
+
+---
+
+# 8. Determinar la audiencia
+
+Si el usuario especifica la audiencia, utilizarla.
+
+Posibles audiencias:
+
+* developers
+* engineers
+* architects
+* CTOs
+* product managers
+* designers
+* founders
+* usuarios técnicos
+* usuarios no técnicos
+* público general
+
+Si no se especifica:
+
+Utiliza una audiencia profesional con conocimientos técnicos medios.
+
+No asumir conocimientos excesivamente especializados.
+
+---
+
+# 9. Construcción de la narrativa
+
+La historia debe responder progresivamente:
+
+1. ¿Qué problema existía?
 2. ¿Por qué era importante?
-3. ¿Qué se decidió construir?
-4. ¿Cómo se construyó?
-5. ¿Qué problemas aparecieron?
+3. ¿Qué objetivo tenía el proyecto?
+4. ¿Qué solución se construyó?
+5. ¿Cómo funciona?
 6. ¿Qué decisiones fueron importantes?
-7. ¿Qué resultado se obtuvo?
-8. ¿Qué aprendimos?
+7. ¿Qué desafíos aparecieron?
+8. ¿Qué resultados existen?
+9. ¿Qué aprendimos?
 
-Evitar convertir el artículo en una simple lista de funcionalidades.
+Evita convertir el artículo en una simple lista de funcionalidades.
 
-El lector debe entender la historia y el razonamiento detrás del proyecto.
+El lector debe entender el razonamiento.
 
 ---
 
-# Estructura editorial por defecto
+# 10. Estructura por defecto
 
-Cuando no se indique otra estructura, utilizar:
+Si el usuario no proporciona una estructura, utiliza:
 
 # Título
 
 Título específico y atractivo.
 
-Evitar títulos genéricos como:
+Evita:
 
 > Cómo hicimos nuestro proyecto
 
-Preferir:
+Prefiere:
 
 > Cómo construimos [X] para resolver [Y]
 
-o:
+> La arquitectura detrás de [X]
 
-> Cómo diseñamos [X] para escalar [Y]
+> Cómo diseñamos [X] para [Y]
+
+> Lo que aprendimos construyendo [X]
 
 ---
 
 ## Introducción
 
-La introducción debe explicar rápidamente:
+Debe responder rápidamente:
 
-- el contexto
-- el problema
-- por qué importa
-- qué se construyó
+* qué ocurre
+* cuál era el problema
+* por qué importa
+* qué se construyó
 
-Debe generar interés sin exagerar.
+La introducción debe generar interés sin clickbait.
 
 ---
 
 ## El problema
 
-Explicar:
+Explica:
 
-- situación inicial
-- limitaciones
-- usuarios afectados
-- impacto
-- por qué las soluciones existentes no eran suficientes, si esto está documentado
+* situación inicial
+* limitaciones
+* usuarios afectados
+* contexto
+* impacto
 
-No agregar problemas que no estén respaldados por la información del proyecto.
+Solo incluir información respaldada.
 
 ---
 
 ## La solución
 
-Explicar:
+Explica:
 
-- qué se construyó
-- cómo funciona a nivel general
-- qué partes son más importantes
-- qué cambió respecto al estado inicial
+* qué se construyó
+* cómo funciona a alto nivel
+* partes principales
+* cambio respecto al estado anterior
 
 ---
 
-## Arquitectura / implementación
+## Cómo funciona
 
 Cuando corresponda:
 
-- arquitectura
-- componentes
-- flujo de datos
-- tecnologías
-- integraciones
-- decisiones técnicas
-
-Utilizar diagramas o ejemplos de código cuando estén disponibles o sean útiles.
+* arquitectura
+* componentes
+* flujo de datos
+* APIs
+* servicios
+* integraciones
 
 ---
 
 ## Decisiones importantes
 
-Explicar las decisiones relevantes mediante:
+Para cada decisión importante utiliza:
 
 > Problema → opciones → decisión → motivo → trade-off
 
-No asumir los motivos de una decisión si no están documentados.
+No inventes el motivo.
 
-Si el motivo es una inferencia:
-
-> Una posible razón detrás de esta decisión es...
+Si no está documentado, indícalo.
 
 ---
 
 ## Desafíos
-
-Explicar los problemas reales encontrados durante el proyecto.
 
 Para cada desafío:
 
@@ -391,7 +538,7 @@ Qué ocurrió.
 
 ### Impacto
 
-Por qué era importante.
+Por qué importaba.
 
 ### Solución
 
@@ -399,147 +546,554 @@ Qué se hizo.
 
 ### Resultado
 
-Qué ocurrió después, si está documentado.
+Qué ocurrió después, si existe evidencia.
 
 ---
 
 ## Resultados
 
-Utilizar métricas cuando estén disponibles.
+Utiliza métricas solamente cuando existan.
+
+Si no existen métricas cuantitativas, dilo.
 
 Ejemplo:
 
-> El tiempo de respuesta pasó de X a Y.
+> La documentación disponible no incluye métricas cuantitativas posteriores al lanzamiento.
 
-Nunca inventar números.
-
-Si no existen métricas:
-
-> No se dispone de métricas cuantitativas en la documentación del proyecto.
-
-No presentar una ausencia de métricas como un fracaso.
+No inventes resultados.
 
 ---
 
 ## Aprendizajes
 
-Extraer aprendizajes directamente relacionados con el proyecto.
+Extrae aprendizajes concretos del proyecto.
 
-Preferir aprendizajes concretos:
+Ejemplos:
 
-- decisiones arquitectónicas
-- proceso
-- producto
-- testing
-- comunicación
-- escalabilidad
-- UX
-- mantenimiento
+* arquitectura
+* producto
+* UX
+* testing
+* escalabilidad
+* mantenimiento
+* proceso
+* deployment
 
-Evitar frases vacías como:
-
-> La comunicación es importante.
-
-Preferir:
-
-> Centralizar las decisiones de arquitectura redujo la ambigüedad durante las siguientes iteraciones.
-
-Solo si esto está respaldado por el proyecto.
+Evita aprendizajes genéricos.
 
 ---
 
 ## Conclusión
 
-Cerrar retomando:
+Retoma:
 
-- problema
-- solución
-- resultado
-- principal aprendizaje
+* problema
+* solución
+* resultado
+* aprendizaje principal
 
 No repetir todo el artículo.
 
 ---
 
-# Estilo de escritura
+# 11. Estilo de escritura
 
-## Claridad
+Escribe de forma:
 
-Escribir de forma:
+* clara
+* directa
+* profesional
+* natural
+* precisa
+* humana
 
-- directa
-- precisa
-- natural
-- profesional
-- fácil de leer
+Prefiere frases relativamente cortas.
 
-Preferir frases cortas.
+Evita párrafos enormes.
 
-Evitar párrafos excesivamente largos.
+Evita repetir la misma idea.
 
----
-
-## Evitar lenguaje corporativo vacío
-
-Evitar expresiones como:
-
-- revolucionario
-- disruptivo
-- de clase mundial
-- solución robusta
-- experiencia excepcional
-- innovación sin precedentes
-- transformamos la industria
-
-A menos que formen parte de una cita o estén específicamente respaldadas.
+Evita introducir información que no aporta a la narrativa.
 
 ---
 
-## Evitar exageraciones
+# 12. Evitar lenguaje corporativo
 
-No escribir:
+No utilices innecesariamente:
 
-> Esta arquitectura resolvió definitivamente el problema de escalabilidad.
+* revolucionario
+* disruptivo
+* innovador
+* de clase mundial
+* robusto
+* escalable
+* excepcional
+* sin precedentes
+* transformación
+* solución 360
+* game changer
 
-Preferir:
-
-> Esta arquitectura permitió resolver el problema de escalabilidad observado durante esta etapa del proyecto.
+Utilízalos solamente si están respaldados o forman parte de una cita.
 
 ---
 
-# Terminología técnica
+# 13. Evitar exageraciones
 
-Cuando exista una audiencia técnica:
+Incorrecto:
 
-- utilizar los nombres reales de las tecnologías
-- explicar conceptos complejos cuando sea necesario
-- evitar simplificaciones incorrectas
+> Esta arquitectura resolvió definitivamente todos nuestros problemas de escalabilidad.
 
-Cuando la audiencia no sea técnica:
+Correcto:
 
-- explicar primero el concepto
-- después utilizar el término técnico
-- reducir jerga innecesaria
+> Esta arquitectura permitió abordar los problemas de escalabilidad identificados durante esta etapa.
+
+---
+
+# 14. Primera persona
+
+Por defecto, cuando el proyecto fue construido por el equipo del usuario, utilizar primera persona plural:
+
+> Decidimos utilizar...
+
+> Construimos...
+
+> Encontramos...
+
+> Durante la implementación...
+
+Si el artículo es institucional, puede utilizarse tercera persona.
+
+---
+
+# 15. Terminología técnica
+
+Para audiencia técnica:
+
+* utiliza nombres reales
+* mantén precisión
+* explica conceptos complejos cuando sea necesario
+
+Para audiencia general:
+
+Explica primero el concepto.
 
 Ejemplo:
 
-> Utilizamos Redis como capa de caching, es decir, un almacenamiento temporal que permite recuperar datos frecuentes más rápidamente.
+> Redis funciona como una capa de caching: un almacenamiento temporal que permite recuperar datos utilizados frecuentemente sin consultar nuevamente la fuente principal.
 
 ---
 
-# Código
+# 16. Código
 
-Cuando el artículo sea técnico y el código esté disponible:
+Si el proyecto contiene código:
 
-- utilizar ejemplos pequeños
-- mostrar únicamente código relevante
-- explicar qué hace
-- no inventar APIs
-- no modificar silenciosamente nombres de funciones o variables
-- mantener coherencia con el proyecto
+Utiliza solamente ejemplos relevantes.
 
-Preferir:
+Reglas:
+
+* no inventar APIs
+* no inventar funciones
+* no cambiar nombres silenciosamente
+* no modificar comportamiento
+* no copiar archivos completos innecesariamente
+* explicar cada ejemplo
+
+Prefiere snippets pequeños.
+
+Ejemplo:
 
 ```js
 const result = await fetchData();
 ```
+
+Después explica qué representa el código.
+
+---
+
+# 17. Diagramas
+
+Si la arquitectura es compleja y el formato lo permite, incluir un diagrama conceptual.
+
+El diagrama puede representar:
+
+* frontend
+* backend
+* APIs
+* base de datos
+* servicios
+* colas
+* servicios externos
+
+No inventes componentes.
+
+Si el diagrama es una simplificación, indicarlo:
+
+> Diagrama simplificado de la arquitectura.
+
+---
+
+# 18. SEO
+
+Si el contenido está destinado a un blog o publicación web, incluir:
+
+## SEO title
+
+Aproximadamente 50–60 caracteres cuando sea posible.
+
+## Meta description
+
+Aproximadamente 140–160 caracteres.
+
+## Slug
+
+Utiliza:
+
+* minúsculas
+* palabras relevantes
+* guiones
+* sin caracteres innecesarios
+
+Ejemplo:
+
+```text
+como-construimos-sistema-recomendaciones
+```
+
+## Keywords
+
+Entre 5 y 10 keywords relevantes.
+
+No utilizar keywords irrelevantes.
+
+---
+
+# 19. Longitud
+
+Si el usuario especifica una longitud, respetarla.
+
+Si no:
+
+### Short
+
+500–800 palabras.
+
+### Medium
+
+1.000–1.500 palabras.
+
+### Long
+
+1.800–3.000 palabras.
+
+### Deep dive
+
+Más de 3.000 palabras únicamente si existe suficiente información.
+
+Nunca rellenar artificialmente para alcanzar una cantidad de palabras.
+
+---
+
+# 20. Confidencialidad
+
+Antes de publicar, comprobar si el proyecto contiene:
+
+* API keys
+* tokens
+* passwords
+* secretos
+* private keys
+* URLs privadas
+* información personal
+* datos de clientes
+* información financiera
+* información interna
+* secretos comerciales
+
+Nunca incluir secretos.
+
+Si aparece información sensible:
+
+> [INFORMACIÓN CONFIDENCIAL OMITIDA]
+
+Nunca reproducir credenciales aunque estén presentes en archivos.
+
+---
+
+# 21. Análisis de código
+
+Cuando el artículo sea técnico y exista código, inspecciona:
+
+* package.json
+* dependencias
+* entry points
+* rutas
+* servicios
+* componentes
+* modelos
+* APIs
+* configuración
+* tests
+* scripts
+* infraestructura
+
+No describas una arquitectura solamente por los nombres de las carpetas.
+
+Confirma mediante:
+
+* imports
+* llamadas
+* interfaces
+* tipos
+* configuración
+* dependencias
+* rutas
+
+---
+
+# 22. Análisis de documentación
+
+Cuando existan documentos, busca especialmente:
+
+* objetivos
+* requisitos
+* decisiones
+* restricciones
+* problemas
+* resultados
+* métricas
+* decisiones rechazadas
+* trade-offs
+
+La documentación puede explicar el "por qué" que no aparece en el código.
+
+---
+
+# 23. Contradicciones
+
+Si encuentras información contradictoria:
+
+1. Detecta la contradicción.
+2. Identifica qué fuente es más reciente.
+3. Prioriza código/documentación actual.
+4. No elijas arbitrariamente.
+5. Si sigue sin estar claro, marca el dato como pendiente.
+
+Ejemplo:
+
+> La documentación y la implementación actual presentan comportamientos diferentes. Debe confirmarse cuál representa el comportamiento esperado antes de publicar.
+
+---
+
+# 24. Fuentes externas
+
+Por defecto, no necesitas investigar fuera del proyecto.
+
+El proyecto es la fuente principal.
+
+Si el usuario solicita investigación externa:
+
+* separa datos internos de datos externos
+* utiliza fuentes confiables
+* cita las fuentes
+* no mezcles hechos externos con hechos del proyecto
+* no uses información externa para inventar resultados
+
+---
+
+# 25. Revisión factual
+
+Antes de entregar el artículo realiza una revisión interna.
+
+Comprueba:
+
+* ¿El problema existe realmente?
+* ¿La solución existe realmente?
+* ¿Las tecnologías son correctas?
+* ¿Las funcionalidades mencionadas existen?
+* ¿Las métricas son reales?
+* ¿Los resultados están respaldados?
+* ¿Las decisiones están documentadas?
+* ¿Las inferencias están claramente diferenciadas?
+* ¿Se inventó alguna información?
+* ¿Se expuso información confidencial?
+* ¿La narrativa representa realmente el proyecto?
+
+Si algo no puede verificarse, elimínalo o márcalo como pendiente.
+
+---
+
+# 26. Entrega
+
+Cuando el usuario solicite un artículo completo, entregar:
+
+# [Título]
+
+## Introducción
+
+...
+
+## El problema
+
+...
+
+## La solución
+
+...
+
+## Cómo funciona
+
+...
+
+## Decisiones importantes
+
+...
+
+## Desafíos
+
+...
+
+## Resultados
+
+...
+
+## Aprendizajes
+
+...
+
+## Conclusión
+
+...
+
+---
+
+## SEO
+
+**SEO title:** ...
+
+**Meta description:** ...
+
+**Slug:** ...
+
+**Keywords:** ...
+
+---
+
+## Datos pendientes de confirmar
+
+* ...
+
+No incluir esta sección si no existen datos pendientes.
+
+---
+
+# 27. Si el usuario pide solamente el artículo
+
+No agregar explicaciones innecesarias.
+
+Entregar directamente el artículo.
+
+---
+
+# 28. Si el usuario pide un borrador
+
+Puedes utilizar placeholders.
+
+Ejemplo:
+
+> [Agregar métrica de performance]
+
+> [Confirmar fecha de lanzamiento]
+
+> [Agregar nombre del cliente si puede publicarse]
+
+No inventar los valores.
+
+---
+
+# 29. Si el usuario pide varias versiones
+
+Puedes producir:
+
+### Versión técnica
+
+Orientada a developers y arquitectos.
+
+### Versión producto
+
+Orientada a producto y negocio.
+
+### Versión ejecutiva
+
+Orientada a liderazgo.
+
+Las tres versiones deben utilizar los mismos hechos.
+
+Nunca cambiar métricas o resultados entre versiones.
+
+---
+
+# 30. Principio editorial final
+
+El objetivo no es hacer que el proyecto parezca más impresionante.
+
+El objetivo es contar correctamente qué ocurrió.
+
+Una historia simple pero verdadera es mejor que una historia impresionante pero inventada.
+
+La prioridad es:
+
+1. Fidelidad
+2. Claridad
+3. Narrativa
+4. Utilidad
+5. Calidad editorial
+6. SEO
+
+Nunca sacrificar fidelidad para mejorar el estilo.
+
+---
+
+# Comportamiento esperado
+
+Cuando el usuario diga:
+
+> "Escribe un artículo sobre este proyecto"
+
+debes:
+
+1. Inspeccionar el proyecto.
+2. Buscar documentación relevante.
+3. Identificar arquitectura y funcionalidades.
+4. Identificar problemas y decisiones.
+5. Identificar resultados disponibles.
+6. Detectar información faltante.
+7. Determinar el mejor tipo de artículo.
+8. Redactar una narrativa.
+9. Revisar factualidad.
+10. Entregar el artículo.
+
+No pidas al usuario información que pueda obtenerse directamente inspeccionando el proyecto.
+
+Solo pregunta cuando la información necesaria realmente no esté disponible.
+
+---
+
+# Resultado esperado
+
+El artículo final debe permitir que una persona que nunca participó en el proyecto pueda entender:
+
+> Qué problema existía.
+
+> Qué se construyó.
+
+> Cómo funciona.
+
+> Por qué se tomaron las decisiones importantes.
+
+> Qué dificultades aparecieron.
+
+> Qué resultado tuvo.
+
+> Qué aprendió el equipo.
+
+El resultado debe sentirse como un artículo escrito por alguien que realmente estudió el proyecto, no como un resumen automático de sus archivos.

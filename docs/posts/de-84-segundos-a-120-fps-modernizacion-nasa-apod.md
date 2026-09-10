@@ -353,3 +353,12 @@ Modernizar una aplicación no consiste únicamente en actualizar dependencias o 
 
 El código completo y los walkthroughs de cada fase de implementación están disponibles en el repositorio de código abierto:  
 👉 [github.com/arcavcwb/react-apod-app](https://github.com/arcavcwb/react-apod-app)
+
+---
+
+## SEO
+
+**SEO title:** De 84s a 120 FPS: Optimización Extrema en React y Vite
+**Meta description:** Cómo rescatamos una app React de la NASA optimizando GPU layers a 120 FPS, reduciendo imágenes un 95% y aislando cuotas 429 con Circuit Breakers.
+**Slug:** de-84-segundos-a-120-fps-modernizacion-nasa-apod
+**Keywords:** React, Vite, Web Performance, Core Web Vitals, GPU Compositing, Circuit Breaker, Zod, Edge CDN, Netlify, Frontend Architecture
