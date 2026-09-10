@@ -213,6 +213,7 @@ export const Gallery: React.FC = () => {
                   <iframe
                     src={selectedItem.url}
                     title={selectedItem.title}
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="w-full h-full border-0"
@@ -246,7 +247,7 @@ export const Gallery: React.FC = () => {
                   <a
                     href={selectedItem.hdurl}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="min-h-[48px] px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-cyan-950 font-bold text-xs inline-flex items-center space-x-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
                   >
                     <BiFullscreen className="w-4 h-4" />

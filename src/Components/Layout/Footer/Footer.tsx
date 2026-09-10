@@ -16,7 +16,7 @@ const Footer: React.FC = () => {
           <a
             href="https://github.com/arcavcwb/react-apod-app"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="hover:text-cyan-300 transition-colors underline-offset-4 hover:underline"
           >
             arcavcwb

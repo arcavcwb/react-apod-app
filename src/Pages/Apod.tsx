@@ -206,7 +206,7 @@ export const Apod: React.FC = () => {
                     <a
                       href={data.hdurl}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="min-h-[48px] px-4 py-2 rounded-lg bg-slate-950/80 hover:bg-slate-900 text-xs font-semibold text-cyan-300 border border-cyan-500/30 inline-flex items-center space-x-2 backdrop-blur-md transition-all shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
                     >
                       <BiFullscreen className="w-4 h-4" />
@@ -220,6 +220,7 @@ export const Apod: React.FC = () => {
                 <iframe
                   src={data.url}
                   title={data.title}
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="w-full h-full border-0"
