@@ -82,7 +82,7 @@ export const About: React.FC = () => {
         <a
           href="https://apod.nasa.gov/apod/astropix.html"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="min-h-[48px] px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-200 hover:text-white border border-slate-700/80 inline-flex items-center space-x-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
         >
           <span>Sitio Oficial NASA APOD</span>
@@ -91,7 +91,7 @@ export const About: React.FC = () => {
         <a
           href="https://api.nasa.gov"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="min-h-[48px] px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-200 hover:text-white border border-slate-700/80 inline-flex items-center space-x-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
         >
           <span>Portal de Desarrolladores NASA</span>
