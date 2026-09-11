@@ -274,11 +274,21 @@ export const Apod: React.FC = () => {
 
       {/* Banner de Resiliencia / Modo Fallback */}
       {isFallback && !loading && (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-4 text-amber-200 flex items-center space-x-3 text-xs sm:text-sm backdrop-blur-md shadow-lg">
-          <BiShieldQuarter className="w-5 h-5 text-amber-400 flex-shrink-0" />
-          <p className="leading-relaxed">
-            <strong className="font-semibold text-amber-300 font-mono">[CANAL DE CONTINGENCIA ACTIVO]:</strong> Cuota pública temporalmente saturada. Se presenta observación de alta definición desde el archivo local curado.
-          </p>
+        <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-4 text-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs sm:text-sm backdrop-blur-md shadow-lg">
+          <div className="flex items-center space-x-3">
+            <BiShieldQuarter className="w-5 h-5 text-amber-400 flex-shrink-0" />
+            <p className="leading-relaxed">
+              <strong className="font-semibold text-amber-300 font-mono">[CANAL DE CONTINGENCIA ACTIVO]:</strong> Cuota pública temporalmente saturada. Se presenta observación de alta definición desde el archivo local curado.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleManualRetry}
+            className="min-h-[48px] px-4 py-2 rounded-lg bg-amber-900/50 hover:bg-amber-800/60 text-amber-200 border border-amber-500/50 text-xs font-mono font-medium flex items-center justify-center space-x-2 transition-all cursor-pointer flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-amber-400/50 active:scale-95"
+          >
+            <BiRefresh className="w-4 h-4" />
+            <span>Reconectar en Vivo</span>
+          </button>
         </div>
       )}
 

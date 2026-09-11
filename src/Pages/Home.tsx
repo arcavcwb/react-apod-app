@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BiRocket, BiImages, BiCalendar, BiRadar, BiPlanet, BiShieldQuarter } from 'react-icons/bi';
+import { BiRocket, BiImages, BiCalendar, BiPlanet, BiShieldQuarter } from 'react-icons/bi';
 import { navigateWithViewTransition } from '../utils/navigation';
-import nasa from '../Assets/nasa.png';
+import { OrbitalSystem } from '../Components/OrbitalSystem/OrbitalSystem';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -14,29 +14,12 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-12 px-4 flex flex-col items-center">
-      {/* Badge de Telemetría Orbital */}
-      <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-slate-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold mb-8 backdrop-blur-xl shadow-glow-cyan">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span className="tracking-widest uppercase">CONSOLA ORBITAL EN LÍNEA</span>
-        <span className="text-slate-600">|</span>
-        <span className="text-slate-400">APOD PROTOCOL v2.0</span>
-      </div>
-
-      {/* Hero Header con Anillos y Radar Simulado */}
-      <div className="text-center max-w-3xl mb-12 relative">
-        <div className="flex justify-center mb-8 relative">
-          {/* Anillos orbitales decorativos */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full border border-cyan-500/20 animate-spin pointer-events-none" style={{ animationDuration: '24s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-dashed border-indigo-500/20 pointer-events-none" />
-
-          <div className="relative z-10 p-3 rounded-full bg-slate-950/80 border border-cyan-500/30 shadow-glow-cyan">
-            <img
-              src={nasa}
-              alt="NASA Insignia"
-              className="w-24 h-auto drop-shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-transform duration-500 hover:scale-105"
-            />
-          </div>
+    <div className="w-full max-w-5xl mx-auto py-8 px-4 flex flex-col items-center">
+      {/* Hero Header con Sistema Orbital Simétrico */}
+      <div className="text-center max-w-3xl mb-12 relative w-full">
+        {/* Sistema Orbital Centrado y Simétrico */}
+        <div className="flex justify-center mb-8">
+          <OrbitalSystem />
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight mb-6 drop-shadow-[0_4px_25px_rgba(0,0,0,0.9)]">
