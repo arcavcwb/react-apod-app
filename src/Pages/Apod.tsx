@@ -41,6 +41,21 @@ function shiftDate(dateStr: string, days: number): string {
   return d.toISOString().split('T')[0];
 }
 
+function formatHumanDate(dateStr: string): string {
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new window.Date(window.Date.UTC(y, m - 1, d));
+    return new Intl.DateTimeFormat('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(date);
+  } catch {
+    return dateStr;
+  }
+}
+
 function getInitialDate(): string {
   if (typeof window !== 'undefined' && window.location && window.location.search) {
     try {
@@ -188,86 +203,67 @@ export const Apod: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-6 px-4 flex flex-col space-y-8">
-      {/* Controles de la Consola Orbital: Navegación Espacio-Temporal */}
+    <div className="w-full max-w-5xl mx-auto py-4 sm:py-6 px-4 flex flex-col space-y-6">
+      {/* Navegación Temporal Minimalista y Ergonómica */}
       <section
-        aria-label="Consola de navegación temporal astronómica"
-        className="relative rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-4 sm:p-6 backdrop-blur-xl shadow-hud-panel flex flex-col md:flex-row items-center justify-between gap-4 hud-corner-brackets"
+        aria-label="Navegación temporal de observaciones"
+        className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md"
       >
-        {/* Cabecera del Control */}
-        <div className="flex items-center space-x-3 w-full md:w-auto">
-          <div className="w-11 h-11 rounded-xl bg-cyan-950/70 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-glow-cyan flex-shrink-0">
-            <BiRadar className="w-6 h-6 animate-spin" style={{ animationDuration: '14s' }} />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-widest flex items-center space-x-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              <span>Coordenada Temporal</span>
-            </span>
-            <span className="text-xs text-slate-300 font-medium">Archivo APOD desde 1995.06.16</span>
-          </div>
-        </div>
-
-        {/* Grupo de Botones de Navegación Espacial */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-start md:justify-end">
-          {/* Botón Día Anterior */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handlePrevDay}
             disabled={selectedDate === '1995-06-16'}
             title="Día Anterior"
             aria-label="Navegar al día anterior"
-            className="min-h-[48px] min-w-[48px] px-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-cyan-300 border border-slate-700/80 hover:border-cyan-500/50 text-xs font-mono inline-flex items-center justify-center space-x-1 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+            className="min-h-[48px] px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-800 text-xs font-medium inline-flex items-center space-x-1.5 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95"
           >
-            <BiChevronLeft className="w-5 h-5" />
+            <BiChevronLeft className="w-5 h-5 text-cyan-400" />
             <span className="hidden sm:inline">Anterior</span>
           </button>
 
-          {/* Selector de Fecha Nativo */}
-          <div className="relative">
-            <input
-              id="apod-date-picker"
-              type="date"
-              value={selectedDate}
-              min="1995-06-16"
-              max={today}
-              onChange={handleDateChange}
-              aria-label="Seleccionar fecha de observación astronómica"
-              className="min-h-[48px] px-4 py-2 rounded-xl bg-slate-950/90 border border-cyan-500/30 text-cyan-200 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-cyan-400/60 shadow-inner cursor-pointer"
-            />
-          </div>
+          <input
+            id="apod-date-picker"
+            type="date"
+            value={selectedDate}
+            min="1995-06-16"
+            max={today}
+            onChange={handleDateChange}
+            aria-label="Seleccionar fecha de observación astronómica"
+            className="min-h-[48px] px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-400/60 cursor-pointer"
+          />
 
-          {/* Botón Día Siguiente */}
           <button
             type="button"
             onClick={handleNextDay}
             disabled={selectedDate === today}
             title="Día Siguiente"
             aria-label="Navegar al día siguiente"
-            className="min-h-[48px] min-w-[48px] px-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-cyan-300 border border-slate-700/80 hover:border-cyan-500/50 text-xs font-mono inline-flex items-center justify-center space-x-1 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+            className="min-h-[48px] px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-800 text-xs font-medium inline-flex items-center space-x-1.5 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95"
           >
             <span className="hidden sm:inline">Siguiente</span>
-            <BiChevronRight className="w-5 h-5" />
+            <BiChevronRight className="w-5 h-5 text-cyan-400" />
           </button>
+        </div>
 
-          {/* Botón Hoy */}
-          <button
-            type="button"
-            onClick={handleToday}
-            disabled={selectedDate === today}
-            className="min-h-[48px] px-4 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-xs font-mono font-semibold text-slate-200 hover:text-white border border-slate-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
-          >
-            Hoy
-          </button>
+        <div className="flex items-center space-x-2">
+          {selectedDate !== today && (
+            <button
+              type="button"
+              onClick={handleToday}
+              className="min-h-[48px] px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-cyan-300 border border-cyan-500/30 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
+            >
+              Hoy
+            </button>
+          )}
 
-          {/* Botón Salto Cuántico Aleatorio */}
           <button
             type="button"
             onClick={handleRandomDate}
-            title="Salto Cuántico a fecha aleatoria"
-            className="min-h-[48px] px-4 py-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/40 text-xs font-mono font-semibold text-cyan-300 inline-flex items-center space-x-2 transition-all shadow-glow-cyan hover:shadow-glow-cyan-lg focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
+            title="Descubrir observación aleatoria"
+            className="min-h-[48px] px-4 py-2 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 text-xs font-medium text-cyan-200 inline-flex items-center space-x-2 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
           >
-            <BiShuffle className="w-4 h-4" />
+            <BiShuffle className="w-4 h-4 text-cyan-400" />
             <span>Aleatorio</span>
           </button>
         </div>
@@ -315,48 +311,44 @@ export const Apod: React.FC = () => {
         </div>
       )}
 
-      {/* Contenido de Observación Científica Principal */}
+      {/* Contenido Principal de Observación */}
       {data && !loading && (
-        <article className={`space-y-8 ${getMotionClass()}`}>
-          {/* Ficha Técnica de Telemetría Superior */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl border border-slate-800/80 bg-slate-950/60 backdrop-blur-md text-xs font-mono text-slate-300">
-            <div>
-              <span className="text-[10px] uppercase text-slate-500 block">Identificador</span>
-              <span className="text-cyan-300 font-bold">APOD-{data.date.replace(/-/g, '')}</span>
-            </div>
-            <div>
-              <span className="text-[10px] uppercase text-slate-500 block">Tipo de Medio</span>
-              <span className="text-indigo-300 font-bold uppercase">{data.media_type}</span>
-            </div>
-            <div>
-              <span className="text-[10px] uppercase text-slate-500 block">Protocolo</span>
-              <span className="text-emerald-400 font-bold">HTTPS SECURE</span>
-            </div>
-            <div>
-              <span className="text-[10px] uppercase text-slate-500 block">Crédito</span>
-              <span className="text-slate-300 truncate block">{data.copyright?.trim() || 'NASA / Dominio Público'}</span>
-            </div>
-          </div>
+        <article className={`space-y-6 ${getMotionClass()}`}>
+          {/* Cabecera Editorial Humana */}
+          <header className="space-y-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-slate-400">
+              <div className="flex items-center space-x-2 text-cyan-400">
+                <BiCalendar className="w-4 h-4" />
+                <time dateTime={data.date} className="font-semibold text-cyan-300 tracking-wide">
+                  {formatHumanDate(data.date)}
+                </time>
+              </div>
 
-          {/* Título Principal de la Observación */}
-          <header className="space-y-3">
-            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+              {data.copyright && (
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <BiCopyright className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Crédito: <strong className="text-slate-100 font-medium">{data.copyright.replace(/[\n\r]+/g, ' ').trim()}</strong></span>
+                </div>
+              )}
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)]">
               {data.title}
             </h1>
           </header>
 
-          {/* Visor Espacial / Space Portal Media Frame */}
+          {/* Visor Cinematográfico de la Imagen */}
           <div className="relative group">
-            {/* Halo de resplandor ambiental estelar */}
+            {/* Halo sutil ambiental */}
             <div
-              className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-indigo-500/15 to-purple-500/20 opacity-70 blur-xl group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+              className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-500/15 via-indigo-500/10 to-purple-500/15 opacity-60 blur-xl group-hover:opacity-90 transition-opacity duration-500 pointer-events-none"
               aria-hidden="true"
             />
 
-            {/* Contenedor del Medio */}
+            {/* Marco de Imagen */}
             <div
               style={{ viewTransitionName: 'hero-apod-image' }}
-              className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl hud-corner-brackets"
+              className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950 shadow-2xl"
             >
               {data.media_type === 'image' ? (
                 <div className="relative">
@@ -369,14 +361,7 @@ export const Apod: React.FC = () => {
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.01]"
                   />
 
-                  {/* Badges de Telemetría Flotantes sobre la Imagen */}
-                  <div className="absolute top-4 left-4 pointer-events-none">
-                    <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-950/80 border border-cyan-500/40 text-cyan-300 text-[10px] font-mono tracking-widest backdrop-blur-md shadow-lg">
-                      <BiRadioCircleMarked className="w-3.5 h-3.5 text-cyan-400 animate-ping" />
-                      <span>OPTICAL APERTURE // LIVE</span>
-                    </span>
-                  </div>
-
+                  {/* Acciones de Imagen */}
                   <div className="absolute top-4 right-4 flex items-center space-x-2">
                     <ShareButton
                       title={data.title}
@@ -388,21 +373,13 @@ export const Apod: React.FC = () => {
                         href={data.hdurl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="min-h-[48px] px-4 py-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-xs font-mono font-bold text-cyan-300 border border-cyan-500/40 inline-flex items-center space-x-2 backdrop-blur-md transition-all shadow-glow-cyan hover:shadow-glow-cyan-lg focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
+                        className="min-h-[48px] px-4 py-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-xs font-semibold text-cyan-300 border border-cyan-500/40 inline-flex items-center space-x-2 backdrop-blur-md transition-all shadow-glow-cyan hover:shadow-glow-cyan-lg focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
                       >
                         <BiFullscreen className="w-4 h-4" />
                         <span className="hidden sm:inline">Ver en Ultra HD</span>
                         <span className="sm:hidden">UHD</span>
                       </a>
                     )}
-                  </div>
-
-                  {/* Coordenadas Técnicas Decorativas Inferiores */}
-                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-[9px] font-mono text-slate-400 pointer-events-none drop-shadow">
-                    <span className="hidden sm:inline">RA 18h 36m // DEC +38° 47'</span>
-                    <span className="ml-auto bg-slate-950/70 px-2 py-0.5 rounded border border-slate-800/80 backdrop-blur-sm">
-                      ISO {data.date}
-                    </span>
                   </div>
                 </div>
               ) : (
@@ -426,21 +403,16 @@ export const Apod: React.FC = () => {
             </div>
           </div>
 
-          {/* Dossier de Explicación Astrofísica */}
+          {/* Explicación Científica Editorial */}
           <section
-            aria-label="Explicación astronómica oficial"
-            className="rounded-2xl border border-slate-800/80 bg-slate-900/50 p-6 sm:p-8 backdrop-blur-xl space-y-4 shadow-hud-panel"
+            aria-label="Historia astronómica de la observación"
+            className="rounded-2xl border border-slate-800/80 bg-slate-900/30 p-6 sm:p-10 backdrop-blur-md space-y-4"
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h2 className="text-base font-bold text-white tracking-wider font-mono uppercase flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                <span>Explicación Astrofísica Oficial</span>
-              </h2>
-              <span className="text-[10px] font-mono text-cyan-400/80 hidden sm:inline">
-                STATUS: VERIFIED
-              </span>
-            </div>
-            <p className="text-slate-200 text-sm sm:text-base leading-relaxed whitespace-pre-line font-normal">
+            <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+              <span>Acerca de esta observación</span>
+            </h2>
+            <p className="text-slate-200 text-base sm:text-lg leading-relaxed whitespace-pre-line font-normal max-w-4xl">
               {data.explanation}
             </p>
           </section>
