@@ -19,7 +19,7 @@
   - [x] Verificación Impeccable: 0 anti-patrones.
   - [x] Pruebas unitarias y compilación estática (`build`).
   - [x] `git add` y `git commit` (Conventional Commits).
-  - [ ] `git push -u origin fix/TASK-017-archive-loading`.
-  - [ ] Crear Pull Request con `gh pr create`.
+  - [x] `git push -u origin fix/TASK-017-archive-loading`.
+  - [x] Crear Pull Request con `gh pr create` (#17).
   - [x] Reporte técnico en `docs/walkthroughs/TASK-017-archive-loading.md`.
   - [ ] Merge a `main` vía Squash (requiere confirmación del usuario: despliega a producción).
