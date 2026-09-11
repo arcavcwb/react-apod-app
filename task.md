@@ -38,7 +38,7 @@
   - [x] `pnpm test:e2e` (390x844 y 1280x720): 19 pasan, 1 omitido a propósito.
   - [x] Revisión final de Impeccable (3 rondas, correcciones aplicadas) y `DESIGN.md`.
 
-- [ ] **Gobernanza Operativa Git Flow (CRÍTICO):**
+- [x] **Gobernanza Operativa Git Flow (CRÍTICO):**
   - [x] NUNCA comitear directamente a `main`.
   - [x] Trabajar en rama feature (`feat/TASK-016-apod-first-overhaul`).
   - [x] Verificación Impeccable (`impeccable detect`): 0 anti-patrones.
@@ -48,4 +48,4 @@
   - [x] Crear Pull Request con `gh pr create` (#16).
   - [x] Descripción del PR fijada al crearlo (`--body-file`).
   - [x] Reporte técnico en `docs/walkthroughs/TASK-016-apod-first-overhaul.md`.
-  - [ ] Merge a `main` vía Squash y limpieza de rama (requiere confirmación del usuario: despliega a producción).
+  - [x] Merge a `main` vía Squash y limpieza de rama (aprobado por el usuario el 2026-09-11).
