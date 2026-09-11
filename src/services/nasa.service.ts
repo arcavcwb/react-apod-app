@@ -2,7 +2,7 @@ import { ApodItem, ApodItemSchema, ApodGallery, ApodGallerySchema } from '../con
 import { getCuratedApod, getCuratedGallery } from './curatedApod';
 
 const NASA_BASE_URL = 'https://api.nasa.gov/planetary/apod';
-const REQUEST_TIMEOUT_MS = 4000; // Fail-fast a 4s para evitar bloqueos prolongados
+const REQUEST_TIMEOUT_MS = 8000; // Tolerancia de 8s para absorber latencias de red pública
 const CIRCUIT_BREAKER_KEY = 'nasa_circuit_breaker_until';
 const CIRCUIT_BREAKER_DURATION_MS = 10 * 60 * 1000; // 10 minutos de protección ante 429
 
@@ -204,9 +204,11 @@ export async function fetchApodByDate(date?: string, forceRefresh = false): Prom
     // Fechas históricas se cachean permanentemente; la de hoy por 6 horas
     writeCache(cacheKey, result.data, isSpecificDate ? 0 : 6 * 60 * 60 * 1000);
     return { data: result.data, error: null, isFallback: false };
-  } catch {
+  } catch (err: any) {
     clearTimeout(timeoutId);
-    tripCircuitBreaker();
+    if (err?.name !== 'AbortError') {
+      tripCircuitBreaker();
+    }
     const fallbackItem = getCuratedApod(date);
     writeCache(cacheKey, fallbackItem, 10 * 60 * 1000);
     return {
@@ -304,9 +306,11 @@ export async function fetchRandomApods(count: number = 12, forceRefresh = false)
     // Cachear resultado exitoso por 30 minutos
     writeCache(cacheKey, result.data, 30 * 60 * 1000);
     return { data: result.data, error: null, isFallback: false };
-  } catch {
+  } catch (err: any) {
     clearTimeout(timeoutId);
-    tripCircuitBreaker();
+    if (err?.name !== 'AbortError') {
+      tripCircuitBreaker();
+    }
     const fallbackGallery = getCuratedGallery(count);
     writeCache(cacheKey, fallbackGallery, 10 * 60 * 1000);
     return {
