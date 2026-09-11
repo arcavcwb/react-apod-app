@@ -10,6 +10,7 @@
     "react-icons": "^4.7.1",
     "react-router-dom": "^7.18.3",
     "react-share": "^4.4.1",
+    "three": "^0.186.0",
     "zod": "^4.5.4"
   },
   "scripts": {
@@ -42,6 +43,7 @@
     "@types/node": "^26.5.0",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.4.12",
     "jsdom": "^30.0.1",

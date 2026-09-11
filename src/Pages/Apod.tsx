@@ -3,6 +3,7 @@ import { fetchApodByDate } from '../services/nasa.service';
 import { ApodItem } from '../contracts/apod.contract';
 import { ProgressiveImage } from '../Components/Media/ProgressiveImage';
 import { Spinner } from '../Components/Spinner/Spinner';
+import { ShareButton } from '../Components/Share/ShareButton';
 import {
   BiCalendar,
   BiRefresh,
@@ -376,8 +377,13 @@ export const Apod: React.FC = () => {
                     </span>
                   </div>
 
-                  {data.hdurl && (
-                    <div className="absolute top-4 right-4">
+                  <div className="absolute top-4 right-4 flex items-center space-x-2">
+                    <ShareButton
+                      title={data.title}
+                      date={data.date}
+                      imageUrl={data.hdurl || data.url}
+                    />
+                    {data.hdurl && (
                       <a
                         href={data.hdurl}
                         target="_blank"
@@ -385,10 +391,11 @@ export const Apod: React.FC = () => {
                         className="min-h-[48px] px-4 py-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-xs font-mono font-bold text-cyan-300 border border-cyan-500/40 inline-flex items-center space-x-2 backdrop-blur-md transition-all shadow-glow-cyan hover:shadow-glow-cyan-lg focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
                       >
                         <BiFullscreen className="w-4 h-4" />
-                        <span>Ver en Ultra HD</span>
+                        <span className="hidden sm:inline">Ver en Ultra HD</span>
+                        <span className="sm:hidden">UHD</span>
                       </a>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {/* Coordenadas Técnicas Decorativas Inferiores */}
                   <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-[9px] font-mono text-slate-400 pointer-events-none drop-shadow">
@@ -400,6 +407,12 @@ export const Apod: React.FC = () => {
                 </div>
               ) : (
                 <div className="relative w-full aspect-video bg-slate-950">
+                  <div className="absolute top-4 right-4 z-10">
+                    <ShareButton
+                      title={data.title}
+                      date={data.date}
+                    />
+                  </div>
                   <iframe
                     src={data.url}
                     title={data.title}
