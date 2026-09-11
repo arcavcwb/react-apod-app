@@ -48,8 +48,16 @@ export function useApodDay(date: string | undefined) {
   );
 }
 
+/** A month; `partial` holds the weeks that have landed while the rest are still on the way. */
 export function useApodMonth(month: string) {
-  return useResource<ApodItem[]>(month, () => peekMonth(month), () => fetchApodMonth(month));
+  const [progress, setProgress] = useState<{ month: string; items: ApodItem[] } | null>(null);
+  const { result, retry } = useResource<ApodItem[]>(
+    month,
+    () => peekMonth(month),
+    () => fetchApodMonth(month, (items) => setProgress({ month, items }))
+  );
+  const partial = result === null && progress?.month === month ? progress.items : null;
+  return { result, partial, retry };
 }
 
 /** Warms the month cache when the browser is idle, so day-to-day travel costs no requests. */

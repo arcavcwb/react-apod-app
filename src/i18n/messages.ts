@@ -62,6 +62,7 @@ const es = {
   'archive.year': 'Año',
   'archive.loading': 'Cargando el mes…',
   'archive.noPicture': 'Sin imagen',
+  'archive.noPreview': 'Sin vista previa',
   'archive.official': 'Archivo oficial',
 
   'orrery.title': 'Navega por el sistema',
@@ -164,6 +165,7 @@ const en: Messages = {
   'archive.year': 'Year',
   'archive.loading': 'Loading the month…',
   'archive.noPicture': 'No picture',
+  'archive.noPreview': 'No preview',
   'archive.official': 'Official archive',
 
   'orrery.title': 'Navigate the system',
@@ -263,6 +265,7 @@ const ptBR: Messages = {
   'archive.year': 'Ano',
   'archive.loading': 'Carregando o mês…',
   'archive.noPicture': 'Sem imagem',
+  'archive.noPreview': 'Sem prévia',
   'archive.official': 'Arquivo oficial',
 
   'orrery.title': 'Navegue pelo sistema',

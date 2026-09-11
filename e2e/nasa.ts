@@ -23,7 +23,11 @@ export async function serveNasa(page: Page, { rateLimited = false } = {}) {
     const url = new URL(route.request().url());
     const date = url.searchParams.get('date');
     const start = url.searchParams.get('start_date');
-    if (start?.startsWith(TODAY.slice(0, 7))) return route.fulfill(json([today]));
+    if (start) {
+      // The app asks for a month as weekly ranges; answer each with the recorded day if it falls inside.
+      const end = url.searchParams.get('end_date') ?? TODAY;
+      return route.fulfill(json(start <= TODAY && TODAY <= end ? [today] : []));
+    }
     if (!date || date === TODAY) return route.fulfill(json(today));
     return route.fulfill(json({ code: 404, msg: 'No data available for date' }, 404));
   });

@@ -2,7 +2,7 @@ import { ApodItem, ApodItemSchema, ApodListSchema } from '../contracts/apod.cont
 import { apodToday, monthOf, monthRange } from '../utils/date';
 
 const API_URL = 'https://api.nasa.gov/planetary/apod';
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 15_000;
 const HOUR_MS = 3_600_000;
 const CACHE_PREFIX = 'apod:v3:';
 
@@ -123,23 +123,58 @@ export async function fetchApodByDate(date: string): Promise<ApodResult<ApodItem
   return { data: parsed.data, error: null };
 }
 
-/** Every picture of a month in one request; also fills the per-day cache. */
-export async function fetchApodMonth(month: string): Promise<ApodResult<ApodItem[]>> {
-  const today = apodToday();
-  const cached = peekMonth(month);
-  if (cached) return { data: cached, error: null };
-
-  const { start, end } = monthRange(month, today);
-  const isCurrent = month === monthOf(today);
-  // Leaving end_date out lets NASA stop at its latest published day.
-  const res = await request(isCurrent ? { start_date: start } : { start_date: start, end_date: end });
+async function fetchRange(params: Record<string, string>, month: string): Promise<ApodResult<ApodItem[]>> {
+  let res = await request(params);
+  // NASA's range endpoint is slow and flaky; one retry absorbs most timeouts and 5xx.
+  if (res.error === 'network') res = await request(params);
   if (res.error) return res;
   const parsed = ApodListSchema.safeParse(res.data);
   if (!parsed.success) {
     console.error('[APOD contract]', parsed.error.issues);
     return { data: null, error: 'contract' };
   }
-  const items = parsed.data.filter((d) => monthOf(d.date) === month);
+  return { data: parsed.data.filter((d) => monthOf(d.date) === month), error: null };
+}
+
+/**
+ * Every picture of a month; also fills the per-day cache.
+ * NASA answers a whole month in 5 to 40 seconds but a week in about 2, so the month is
+ * fetched as parallel weeks and `onProgress` receives each week as it lands.
+ */
+export async function fetchApodMonth(
+  month: string,
+  onProgress?: (items: ApodItem[]) => void
+): Promise<ApodResult<ApodItem[]>> {
+  const today = apodToday();
+  const cached = peekMonth(month);
+  if (cached) return { data: cached, error: null };
+
+  const { start, end } = monthRange(month, today);
+  const isCurrent = month === monthOf(today);
+  const chunks: Record<string, string>[] = [];
+  for (let day = Number(start.slice(8)); day <= Number(end.slice(8)); day += 7) {
+    const last = Math.min(day + 6, Number(end.slice(8)));
+    const chunk = { start_date: `${month}-${String(day).padStart(2, '0')}`, end_date: `${month}-${String(last).padStart(2, '0')}` };
+    // The week that reaches today leaves end_date out, so NASA stops at its latest published day.
+    chunks.push(isCurrent && last === Number(end.slice(8)) ? { start_date: chunk.start_date } : chunk);
+  }
+
+  const collected: ApodItem[] = [];
+  const byDate = (a: ApodItem, b: ApodItem) => a.date.localeCompare(b.date);
+  const results = await Promise.all(
+    chunks.map(async (params) => {
+      const res = await fetchRange(params, month);
+      if (res.data) {
+        collected.push(...res.data);
+        onProgress?.([...collected].sort(byDate));
+      }
+      return res;
+    })
+  );
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return { data: null, error: failed.error };
+
+  const items = collected.sort(byDate);
   writeCache(`month:${month}`, items, isCurrent ? HOUR_MS : null);
   items.forEach((item) => cacheDay(item, today));
   return { data: items, error: null };

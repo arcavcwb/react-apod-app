@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useViewTransitionState } from 'react-router-dom';
 import { BiChevronDown, BiChevronLeft, BiChevronRight, BiLinkExternal, BiPlay } from 'react-icons/bi';
 import { EmptyPlate } from '../Components/Plate/Plate';
@@ -45,11 +45,12 @@ export const Archive: React.FC = () => {
 
 const MonthIndex: React.FC<{ month: string; today: string }> = ({ month, today }) => {
   const { t, locale } = useI18n();
-  const { result, retry } = useApodMonth(month);
+  const { result, partial, retry } = useApodMonth(month);
   const monthName = formatApodDate(`${month}-01`, locale, { month: 'long', year: 'numeric' });
   useDocumentTitle(`${t('archive.title')} · ${monthName}`);
 
-  const byDay = new Map((result?.data ?? []).map((item) => [Number(item.date.slice(8)), item]));
+  // Weeks render as they land; the rest of the month stays in its loading state.
+  const byDay = new Map((result?.data ?? partial ?? []).map((item) => [Number(item.date.slice(8)), item]));
   const lastDay = month === monthOf(today) ? Number(today.slice(8)) : daysInMonth(month);
   const firstDay = month === FIRST_MONTH ? Number(APOD_FIRST_DATE.slice(8)) : 1;
   const days = Array.from({ length: daysInMonth(month) }, (_, i) => i + 1);
@@ -61,6 +62,11 @@ const MonthIndex: React.FC<{ month: string; today: string }> = ({ month, today }
   return (
     <div className="mx-auto max-w-[90rem] px-4 pb-16 pt-8 sm:px-6 lg:px-10">
       <MonthHeader month={month} today={today} title={monthName} />
+      {result === null && (
+        <p role="status" className="notation mt-4 text-faint">
+          {t('archive.loading')}
+        </p>
+      )}
 
       {result?.error ? (
         <EmptyPlate className="mt-8 min-h-[50svh]" title={t(`error.${result.error}.title`)} body={t(`error.${result.error}.body`)}>
@@ -91,17 +97,12 @@ const MonthIndex: React.FC<{ month: string; today: string }> = ({ month, today }
                 key={day}
                 date={`${month}-${String(day).padStart(2, '0')}`}
                 item={byDay.get(day)}
-                status={day < firstDay || day > lastDay ? 'outside' : result === null ? 'loading' : byDay.has(day) ? 'ready' : 'missing'}
+                status={day < firstDay || day > lastDay ? 'outside' : byDay.has(day) ? 'ready' : result === null ? 'loading' : 'missing'}
                 isToday={`${month}-${String(day).padStart(2, '0')}` === today}
                 offset={day === 1 ? firstWeekday(month) : 0}
               />
             ))}
           </ol>
-          {result === null && (
-            <p role="status" className="notation mt-6 text-faint">
-              {t('archive.loading')}
-            </p>
-          )}
         </>
       )}
     </div>
@@ -221,7 +222,8 @@ const DayCell: React.FC<DayCellProps> = ({ date, item, status, isToday, offset }
       <span className="md:hidden">
         {' '}
         · {weekday}
-        {item && !thumb && ` · ${t('day.other')}`}
+        {item?.media_type === 'video' && ` · ${t('day.video')}`}
+        {item?.media_type === 'other' && !thumb && ` · ${t('day.other')}`}
       </span>
     </span>
   );
@@ -251,23 +253,21 @@ const DayCell: React.FC<DayCellProps> = ({ date, item, status, isToday, offset }
         className="group flex min-h-20 gap-4 py-3 focus-visible:outline-offset-[-2px] md:h-full md:flex-col md:gap-0 md:p-3"
       >
         <span className="relative block aspect-square w-20 shrink-0 overflow-hidden bg-ink-2 md:order-2 md:mt-3 md:w-full">
-          {thumb && (
-            <img
-              src={optimizedImageUrl(thumb, THUMB_WIDTH)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover opacity-80 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
-              style={isTransitioning ? { viewTransitionName: 'plate' } : undefined}
-            />
+          {thumb && <Thumb key={thumb} src={thumb} transitioning={isTransitioning} />}
+          {/* Videos hosted as files have no still: draw the play mark instead of an empty square. */}
+          {!thumb && item.media_type === 'video' && (
+            <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-muted">
+              <BiPlay className="h-8 w-8" />
+            </span>
           )}
-          {!thumb && (
+          {!thumb && item.media_type !== 'video' && (
             <span className="notation absolute inset-0 hidden items-center justify-center p-2 text-center text-faint md:flex">
               {t('day.other')}
             </span>
           )}
           {item.media_type === 'video' && (
-            <span className="notation absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 bg-ink px-1.5 text-star">
+            // Phones name the video in the row notation; the square is too small for a label.
+            <span className="notation absolute bottom-1.5 left-1.5 hidden items-center gap-1 bg-ink px-1.5 text-star md:inline-flex">
               <BiPlay aria-hidden="true" className="h-3.5 w-3.5" />
               {t('day.video')}
             </span>
@@ -275,11 +275,40 @@ const DayCell: React.FC<DayCellProps> = ({ date, item, status, isToday, offset }
         </span>
         <span className="min-w-0 md:contents">
           <span className="md:order-1 md:block">{number}</span>
-          <span lang="en" className="mt-1 line-clamp-2 font-serif text-base leading-snug text-copy group-hover:text-star md:order-3 md:mt-2 md:text-[0.9375rem]">
+          <span lang="en" className="mt-1 line-clamp-2 font-serif text-base leading-snug text-copy group-hover:text-star md:order-3 md:mt-2">
             {item.title}
           </span>
         </span>
       </Link>
     </li>
+  );
+};
+
+/** Archive thumbnail: fades in once decoded; falls back to NASA's own file if the resizing CDN fails. */
+const Thumb: React.FC<{ src: string; transitioning: boolean }> = ({ src, transitioning }) => {
+  const { t } = useI18n();
+  const [stage, setStage] = useState<'cdn' | 'raw' | 'failed'>('cdn');
+  const [loaded, setLoaded] = useState(false);
+
+  if (stage === 'failed') {
+    return (
+      <span className="notation absolute inset-0 hidden items-center justify-center p-2 text-center text-faint md:flex">
+        {t('archive.noPreview')}
+      </span>
+    );
+  }
+  return (
+    <img
+      src={stage === 'cdn' ? optimizedImageUrl(src, THUMB_WIDTH) : src}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      onLoad={() => setLoaded(true)}
+      onError={() => setStage(stage === 'cdn' ? 'raw' : 'failed')}
+      className={`h-full w-full object-cover transition-opacity duration-500 ease-out-expo ${
+        loaded ? 'opacity-80 group-hover:opacity-100 group-focus-visible:opacity-100' : 'opacity-0'
+      }`}
+      style={transitioning ? { viewTransitionName: 'plate' } : undefined}
+    />
   );
 };
