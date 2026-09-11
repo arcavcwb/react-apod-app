@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchRandomApods, getMediaThumbnail } from '../services/nasa.service';
 import { ApodItem } from '../contracts/apod.contract';
 import { ProgressiveImage } from '../Components/Media/ProgressiveImage';
 import { Spinner } from '../Components/Spinner/Spinner';
+import { navigateWithViewTransition } from '../utils/navigation';
 import {
   BiImages,
   BiRefresh,
@@ -13,15 +15,19 @@ import {
   BiInfoCircle,
   BiPlayCircle,
   BiShieldQuarter,
+  BiRocket,
+  BiRadar,
 } from 'react-icons/bi';
 
 export const Gallery: React.FC = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState<ApodItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = useState<ApodItem | null>(null);
+  const [inspectingItem, setInspectingItem] = useState<ApodItem | null>(null);
+  const [transitioningDate, setTransitioningDate] = useState<string | null>(null);
 
   const loadGallery = useCallback(async (forceRefresh = false) => {
     setLoading(true);
@@ -30,7 +36,6 @@ export const Gallery: React.FC = () => {
     if (res.error) {
       setError(res.error);
     } else if (res.data) {
-      // Filtrar items con URL válida
       setItems(res.data.filter((it) => !!it.url));
       setIsFallback(!!res.isFallback);
     }
@@ -51,28 +56,34 @@ export const Gallery: React.FC = () => {
     loadGallery();
   }, [loadGallery]);
 
+  // Navegar a APOD con View Transition directa de la tarjeta
+  const handleOpenInApod = (item: ApodItem) => {
+    setTransitioningDate(item.date);
+    navigateWithViewTransition(navigate, `/apod?date=${item.date}`);
+  };
+
   return (
-    <div className="w-full max-w-6xl mx-auto py-8 px-4 flex flex-col space-y-8">
-      {/* Encabezado de la Galería */}
-      <header className="text-center max-w-2xl mx-auto space-y-3">
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-semibold">
-          <BiImages className="w-4 h-4" />
-          <span>Muestrario Astronómico Dinámico</span>
+    <div className="w-full max-w-7xl mx-auto py-8 px-4 flex flex-col space-y-10">
+      {/* Encabezado del Archivo Orbital */}
+      <header className="text-center max-w-3xl mx-auto space-y-4">
+        <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold tracking-wider shadow-glow-cyan backdrop-blur-md">
+          <BiRadar className="w-4 h-4 animate-spin text-cyan-400" style={{ animationDuration: '10s' }} />
+          <span>ARCHIVO ORBITAL // COORDENADAS ALEATORIAS</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          Galería del Universo
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)]">
+          Archivo Cósmico Profundo
         </h1>
-        <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-          Selección de observaciones y astrofotografías de la NASA. Selecciona cualquier tarjeta para inspeccionar su ficha técnica en alta resolución.
+        <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+          Muestrario de observaciones astrofísicas indexadas en la base de datos de la NASA. Selecciona cualquier cuadrante para transferir el medio al visor principal.
         </p>
       </header>
 
-      {/* Banner de Resiliencia / Modo Respaldo */}
+      {/* Banner de Respaldo */}
       {isFallback && !loading && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 text-amber-200 flex items-center space-x-3 text-xs sm:text-sm">
+        <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-4 text-amber-200 flex items-center space-x-3 text-xs sm:text-sm backdrop-blur-md shadow-lg">
           <BiShieldQuarter className="w-5 h-5 text-amber-400 flex-shrink-0" />
           <p>
-            <strong className="font-semibold text-amber-300">Modo Respaldo Activo:</strong> Debido a la alta demanda en la API de NASA, se presenta una selección curada del archivo cósmico con disponibilidad garantizada.
+            <strong className="font-semibold text-amber-300 font-mono">[ARCHIVO DE CONTINGENCIA]:</strong> Presentando selección curada de alta resolución ante saturación de cuota pública.
           </p>
         </div>
       )}
@@ -82,137 +93,155 @@ export const Gallery: React.FC = () => {
 
       {/* Estado de Error */}
       {error && !loading && (
-        <div className="rounded-2xl border border-red-500/30 bg-red-950/30 p-6 text-center flex flex-col items-center space-y-4">
-          <BiInfoCircle className="w-8 h-8 text-red-400" />
+        <div className="rounded-2xl border border-rose-500/40 bg-rose-950/30 p-8 text-center flex flex-col items-center space-y-4 backdrop-blur-xl">
+          <BiInfoCircle className="w-10 h-10 text-rose-400" />
           <p className="text-sm text-slate-300 max-w-md">{error}</p>
           <button
             type="button"
             onClick={() => loadGallery(true)}
-            className="min-h-[48px] px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 inline-flex items-center space-x-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
+            className="min-h-[48px] px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-mono font-semibold text-cyan-300 border border-cyan-500/40 inline-flex items-center space-x-2 transition-all shadow-glow-cyan focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
           >
             <BiRefresh className="w-4 h-4" />
-            <span>Reintentar carga</span>
+            <span>Reintentar Enlace</span>
           </button>
         </div>
       )}
 
-      {/* Cuadrícula de Galería */}
+      {/* Cuadrícula de Archivo Orbital */}
       {!loading && items.length > 0 && (
-        <section aria-label="Cuadrícula de fotografías espaciales" className="space-y-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section aria-label="Cuadrícula de observaciones astronómicas" className="space-y-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {items.map((item, idx) => {
               const thumbnailUrl = getMediaThumbnail(item);
               const isVideo = item.media_type === 'video';
+              const sectorId = String(idx + 1).padStart(2, '0');
+              const isTargetTransition = transitioningDate === item.date;
 
               return (
                 <article
                   key={`${item.date}-${idx}`}
-                  onClick={() => setSelectedItem(item)}
-                  className="group rounded-2xl border border-slate-800/80 bg-slate-900/90 overflow-hidden transition-all duration-300 hover:border-cyan-500/40 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(6,182,212,0.1)] cursor-pointer flex flex-col"
+                  onClick={() => handleOpenInApod(item)}
+                  className="group relative rounded-2xl border border-slate-800/80 bg-slate-950/70 overflow-hidden transition-all duration-300 hover:border-cyan-500/50 hover:shadow-glow-cyan hover:-translate-y-1.5 cursor-pointer flex flex-col backdrop-blur-md hud-corner-brackets"
                 >
-                  <div className="relative overflow-hidden">
+                  {/* Contenedor de Imagen con View Transition Target */}
+                  <div
+                    style={isTargetTransition ? { viewTransitionName: 'hero-apod-image' } : undefined}
+                    className="relative aspect-square overflow-hidden bg-slate-950"
+                  >
                     <ProgressiveImage
                       src={thumbnailUrl}
                       alt={item.title}
                       aspectRatio="aspect-square"
                       priority={false}
                       fallbackSrc={item.hdurl || undefined}
-                      className="group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     />
 
-                    {/* Indicador de Video Embebido */}
+                    {/* Overlay sutil de scanlines al hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+
+                    {/* Badge de Sector Orbital */}
+                    <div className="absolute top-3 left-3 pointer-events-none">
+                      <span className="px-2 py-0.5 rounded bg-slate-950/80 border border-slate-800 text-[10px] font-mono text-cyan-400/90 tracking-widest backdrop-blur-sm">
+                        SEC-{sectorId}
+                      </span>
+                    </div>
+
+                    {/* Indicador de Video */}
                     {isVideo && (
-                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/30 group-hover:bg-slate-950/10 transition-colors pointer-events-none">
-                        <div className="w-12 h-12 rounded-full bg-slate-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-400 shadow-lg group-hover:scale-110 transition-transform">
-                          <BiPlayCircle className="w-8 h-8" />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-12 h-12 rounded-full bg-slate-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-400 shadow-glow-cyan group-hover:scale-110 transition-transform">
+                          <BiPlayCircle className="w-7 h-7" />
                         </div>
                       </div>
                     )}
+
+                    {/* Badge de Tipo en Esquina Superior Derecha */}
+                    <div className="absolute top-3 right-3 pointer-events-none">
+                      <span className="px-2 py-0.5 rounded bg-slate-950/80 border border-cyan-500/30 text-[10px] font-mono text-slate-300 uppercase">
+                        {item.media_type}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                  {/* Cuerpo de Metadatos de la Card */}
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                     <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center space-x-1 text-xs font-mono text-cyan-400">
-                          <BiCalendar className="w-3.5 h-3.5" />
-                          <span>{item.date}</span>
-                        </span>
-                        {isVideo && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 uppercase tracking-wider">
-                            Video
-                          </span>
-                        )}
+                      <div className="flex items-center space-x-1.5 text-[11px] font-mono text-cyan-400">
+                        <BiCalendar className="w-3.5 h-3.5" />
+                        <span>{item.date}</span>
                       </div>
-                      <h2 className="text-base font-bold text-white line-clamp-2 group-hover:text-cyan-300 transition-colors">
+                      <h2 className="text-sm font-bold text-white line-clamp-2 group-hover:text-cyan-300 transition-colors">
                         {item.title}
                       </h2>
                     </div>
-                    <span className="text-xs text-slate-400 font-medium inline-flex items-center space-x-1">
-                      <span>Ver detalles</span>
+
+                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400 group-hover:text-cyan-300 transition-colors">
+                      <span>EXPLORAR EN VISOR</span>
                       <span aria-hidden="true">&rarr;</span>
-                    </span>
+                    </div>
                   </div>
                 </article>
               );
             })}
           </div>
 
-          {/* Botón de Cargar Más */}
-          <div className="flex justify-center pt-4">
+          {/* Botón de Carga de Más Observaciones */}
+          <div className="flex justify-center pt-6">
             <button
               type="button"
               onClick={loadMore}
               disabled={loadingMore}
-              className="min-h-[48px] px-8 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 font-semibold text-sm inline-flex items-center space-x-2 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50 cursor-pointer"
+              className="min-h-[48px] px-8 py-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-cyan-500/30 font-mono text-xs uppercase tracking-wider inline-flex items-center space-x-2 transition-all shadow-glow-cyan hover:shadow-glow-cyan-lg focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50 cursor-pointer active:scale-95"
             >
-              <BiRefresh className={`w-5 h-5 text-cyan-400 ${loadingMore ? 'animate-spin' : ''}`} />
-              <span>{loadingMore ? 'Cargando más fotos...' : 'Cargar Más Fotografías'}</span>
+              <BiRefresh className={`w-4 h-4 text-cyan-400 ${loadingMore ? 'animate-spin' : ''}`} />
+              <span>{loadingMore ? 'Sincronizando archivo...' : 'Cargar Más Sectores'}</span>
             </button>
           </div>
         </section>
       )}
 
-      {/* Modal de Detalle de Imagen / Video */}
-      {selectedItem && (
+      {/* Modal de Inspección Rápida en Caso de Requerirse */}
+      {inspectingItem && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={selectedItem.title}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-          onClick={() => setSelectedItem(null)}
+          aria-label={inspectingItem.title}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl"
+          onClick={() => setInspectingItem(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950/95 p-6 sm:p-8 space-y-6 shadow-2xl relative"
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-cyan-500/30 bg-slate-950/95 p-6 sm:p-8 space-y-6 shadow-2xl relative hud-corner-brackets"
           >
             {/* Header del Modal */}
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-semibold mb-2">
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold mb-2">
                   <BiCalendar className="w-3.5 h-3.5" />
-                  <span>{selectedItem.date}</span>
+                  <span>{inspectingItem.date}</span>
                 </span>
                 <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  {selectedItem.title}
+                  {inspectingItem.title}
                 </h2>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedItem(null)}
-                aria-label="Cerrar ventana de detalle"
-                className="min-w-[48px] min-h-[48px] w-12 h-12 flex items-center justify-center rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
+                onClick={() => setInspectingItem(null)}
+                aria-label="Cerrar terminal de detalle"
+                className="min-w-[48px] min-h-[48px] w-12 h-12 flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
               >
                 <BiX className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Visualizador de Medios en Modal: Imagen o Video */}
-            <div className="overflow-hidden rounded-xl">
-              {selectedItem.media_type === 'video' ? (
-                <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
+            {/* Visualizador en Modal */}
+            <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+              {inspectingItem.media_type === 'video' ? (
+                <div className="relative w-full aspect-video">
                   <iframe
-                    src={selectedItem.url}
-                    title={selectedItem.title}
+                    src={inspectingItem.url}
+                    title={inspectingItem.title}
                     sandbox="allow-scripts allow-same-origin allow-presentation"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -221,40 +250,51 @@ export const Gallery: React.FC = () => {
                 </div>
               ) : (
                 <ProgressiveImage
-                  src={selectedItem.url}
-                  alt={selectedItem.title}
+                  src={inspectingItem.url}
+                  alt={inspectingItem.title}
                   aspectRatio="aspect-video"
                   priority={true}
-                  fallbackSrc={selectedItem.hdurl || undefined}
+                  fallbackSrc={inspectingItem.hdurl || undefined}
                 />
               )}
             </div>
 
-            {/* Información y Enlaces HD */}
+            {/* Información Científica */}
             <div className="space-y-4">
-              {selectedItem.copyright && (
-                <div className="flex items-center space-x-2 text-xs text-slate-400">
+              {inspectingItem.copyright && (
+                <div className="flex items-center space-x-2 text-xs font-mono text-slate-400">
                   <BiCopyright className="w-4 h-4 text-slate-500" />
-                  <span>Crédito fotográfico: {selectedItem.copyright.trim()}</span>
+                  <span>Crédito: {inspectingItem.copyright.trim()}</span>
                 </div>
               )}
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-line">
-                {selectedItem.explanation}
+                {inspectingItem.explanation}
               </p>
 
-              {selectedItem.hdurl && (
-                <div className="pt-2">
+              <div className="pt-2 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInspectingItem(null);
+                    handleOpenInApod(inspectingItem);
+                  }}
+                  className="min-h-[48px] px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-cyan-950 font-mono font-bold text-xs inline-flex items-center space-x-2 transition-all shadow-glow-cyan focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer active:scale-95"
+                >
+                  <BiRocket className="w-4 h-4" />
+                  <span>Cargar en Visor APOD</span>
+                </button>
+                {inspectingItem.hdurl && (
                   <a
-                    href={selectedItem.hdurl}
+                    href={inspectingItem.hdurl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-h-[48px] px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-cyan-950 font-bold text-xs inline-flex items-center space-x-2 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
+                    className="min-h-[48px] px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 font-mono text-xs inline-flex items-center space-x-2 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer"
                   >
                     <BiFullscreen className="w-4 h-4" />
-                    <span>Ver Imagen Original en Ultra HD</span>
+                    <span>Ver Ultra HD</span>
                   </a>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
