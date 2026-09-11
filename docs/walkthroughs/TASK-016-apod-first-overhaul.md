@@ -57,9 +57,21 @@ Las skills vivían en `.agents/skills` (formato Antigravity) y Claude Code no la
 |---|---|---|
 | Tipos | `pnpm exec tsc` | 0 errores en modo `strict` |
 | Unit y componentes | `pnpm test` | 6 archivos, 32 tests |
-| E2E | `pnpm test:e2e` | PENDIENTE |
+| E2E | `pnpm test:e2e` (390x844 y 1280x720) | 19 pasan, 1 omitido a propósito (flechas del teclado solo en escritorio) |
 | Detector Impeccable | `impeccable detect --json src index.html` | 0 hallazgos |
-| Bundle | `pnpm build` | JS inicial 369 KB (117 KB gzip), antes 896 KB (244 KB gzip); Three.js aparte, 545 KB diferidos |
+| Bundle | `pnpm build` | JS inicial 371 KB (118 KB gzip), antes 896 KB (244 KB gzip); Three.js aparte, 545 KB diferidos |
+
+La E2E usa una respuesta real grabada de la API (2026-09-11) y reloj fijo. Cualquier otra fecha responde 404, como hace la NASA con un día sin imagen. La `DEMO_KEY` quedó agotada durante toda la sesión (429 desde las 09:43), así que no se pudo grabar un mes completo.
+
+### Revisión final de Impeccable
+
+Un subagente revisor independiente auditó el resultado contra el contrato de dirección en tres rondas:
+
+1. Disposición `fix`, 8 correcciones materiales: la regla no movía la lámina, la regla móvil quedaba bajo el pliegue, el focus pull pasaba por negro, el selector de idioma escondía dos idiomas, el icono de fecha era invisible, las acciones no formaban grupo, había rojo en los errores y se veía la costura del letterbox.
+2. Veredicto: 6 resueltas y 2 parciales por falta de evidencia, más 3 regresiones: el código de lámina durante el arrastre, las flechas del archivo móvil y una marca de la regla sin número.
+3. Veredicto: las parciales y 2 regresiones resueltas, más 4 detalles: el borde del calendario sin color, los días futuros sin número, el día interactivo sin etiqueta en móvil y la evidencia del arrastre sin caché. Se corrigieron y se verificaron en capturas propias; no hubo una cuarta ronda del revisor.
+
+Para las capturas del archivo poblado, los días del 1 al 10 de septiembre se reconstruyeron desde las páginas oficiales `apod.nasa.gov/apod/ap2609DD.html` (títulos, fechas y URLs de imagen reales). Esos datos no se comitean.
 
 ## 7. Pendiente para producción
 

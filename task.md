@@ -31,21 +31,21 @@
   - [x] Fuera `axios`, `react-share`, `jest-dom`, `package-lock.json` y ~45 archivos muertos.
   - [x] CSP sin `unsafe-inline` en scripts; `remote_images` sin Unsplash; caché inmutable para `/assets/*`.
 
-- [ ] **Fase 7: Verificación Zero-Trust**
+- [x] **Fase 7: Verificación Zero-Trust**
   - [x] `pnpm exec tsc` sin errores.
   - [x] `pnpm test`: 6 archivos, 32 tests.
   - [x] Detector Impeccable: 0 hallazgos.
-  - [ ] `pnpm test:e2e` (390x844 y 1280x720) con respuestas reales grabadas.
-  - [ ] Revisión final de Impeccable y `DESIGN.md`.
+  - [x] `pnpm test:e2e` (390x844 y 1280x720): 19 pasan, 1 omitido a propósito.
+  - [x] Revisión final de Impeccable (3 rondas, correcciones aplicadas) y `DESIGN.md`.
 
 - [ ] **Gobernanza Operativa Git Flow (CRÍTICO):**
   - [x] NUNCA comitear directamente a `main`.
   - [x] Trabajar en rama feature (`feat/TASK-016-apod-first-overhaul`).
   - [x] Verificación Impeccable (`impeccable detect`): 0 anti-patrones.
   - [x] Pruebas unitarias y compilación estática (`build`).
-  - [ ] `git add` y `git commit` (Conventional Commits).
+  - [x] `git add` y `git commit` (Conventional Commits).
   - [ ] `git push -u origin feat/TASK-016-apod-first-overhaul`.
   - [ ] Crear Pull Request con `gh pr create`.
   - [ ] Actualizar descripción del PR vía GitHub API.
-  - [ ] Reporte técnico en `docs/walkthroughs/TASK-016-apod-first-overhaul.md`.
+  - [x] Reporte técnico en `docs/walkthroughs/TASK-016-apod-first-overhaul.md`.
   - [ ] Merge a `main` vía Squash y limpieza de rama (requiere confirmación del usuario: despliega a producción).
