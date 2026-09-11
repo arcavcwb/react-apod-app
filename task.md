@@ -13,7 +13,7 @@
   - [x] `tsc`, 34 tests unitarios, E2E 19 pasan y 1 omitido, detector 0 hallazgos.
   - [x] Prueba con la API real en escritorio y móvil.
 
-- [ ] **Gobernanza Operativa Git Flow (CRÍTICO):**
+- [x] **Gobernanza Operativa Git Flow (CRÍTICO):**
   - [x] NUNCA comitear directamente a `main`.
   - [x] Trabajar en rama (`fix/TASK-017-archive-loading`).
   - [x] Verificación Impeccable: 0 anti-patrones.
@@ -22,4 +22,4 @@
   - [x] `git push -u origin fix/TASK-017-archive-loading`.
   - [x] Crear Pull Request con `gh pr create` (#17).
   - [x] Reporte técnico en `docs/walkthroughs/TASK-017-archive-loading.md`.
-  - [ ] Merge a `main` vía Squash (requiere confirmación del usuario: despliega a producción).
+  - [x] Merge a `main` vía Squash (aprobado por el usuario el 2026-09-11).
