@@ -105,8 +105,8 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           {...({ fetchpriority: priority ? 'high' : 'auto' } as Record<string, string>)}
           onLoad={() => setLoaded(true)}
           onError={handleImageError}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
-            loaded ? 'opacity-100' : 'opacity-0'
+          className={`w-full h-full object-cover transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:scale-100 motion-reduce:blur-0 ${
+            loaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 blur-md'
           }`}
         />
       )}
