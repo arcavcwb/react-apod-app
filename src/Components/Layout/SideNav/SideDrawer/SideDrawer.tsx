@@ -37,12 +37,12 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, openHandler }) =
           </li>
           <li>
             <NavBtn path="/apod" onClick={openHandler} className="w-full justify-start text-sm">
-              A.P.O.D
+              Foto de Hoy
             </NavBtn>
           </li>
           <li>
             <NavBtn path="/gallery" onClick={openHandler} className="w-full justify-start text-sm">
-              Galería
+              Archivo
             </NavBtn>
           </li>
           <li>
