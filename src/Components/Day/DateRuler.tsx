@@ -43,9 +43,10 @@ export const DateRuler: React.FC<DateRulerProps> = ({ date, onPreview, onCommit 
     onPreview(toDate(day));
   };
 
-  // Numbered ticks: every fifth day plus both ends, dropping any that would crowd an end label.
-  const majors = Array.from({ length: max - min + 1 }, (_, i) => min + i).filter((d) => d % 5 === 0 || d === min || d === max);
-  const labels = majors.filter((d) => d === min || d === max || (d - min >= 2 && max - d >= 2));
+  // Numbered major ticks: every fifth day, plus each end unless a fifth day sits within two days of it.
+  const fifths = Array.from({ length: max - min + 1 }, (_, i) => min + i).filter((d) => d % 5 === 0);
+  const clear = (end: number) => !fifths.some((d) => d !== end && Math.abs(d - end) <= 2);
+  const majors = [...new Set([min, ...fifths, max])].filter((d) => fifths.includes(d) || clear(d));
   const previewTitle = preview !== null ? peekMonth(month)?.find((d) => d.date === toDate(value))?.title : undefined;
 
   return (
@@ -90,10 +91,10 @@ export const DateRuler: React.FC<DateRulerProps> = ({ date, onPreview, onCommit 
         />
       </div>
       <div aria-hidden="true" className="relative h-5">
-        {labels.map((d) => (
+        {majors.map((d) => (
           <span
             key={d}
-            className={`notation absolute text-faint transition-opacity ${Math.abs(d - value) < 2 ? 'opacity-0' : ''}`}
+            className="notation absolute text-faint"
             style={{ left: `${pos(d)}%`, transform: `translateX(-${pos(d)}%)` }}
           >
             {d}

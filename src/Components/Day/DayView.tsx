@@ -70,7 +70,8 @@ export const DayView: React.FC<{ date?: string }> = ({ date }) => {
         <div className="relative lg:col-span-8 lg:row-start-1 lg:pl-8">
           {shownDate && (
             <p aria-hidden="true" className="vertical-notation notation absolute left-0 top-0 hidden text-faint lg:block">
-              {plateCode(scrub ?? shownDate)}
+              {/* The code names the day the plate actually shows. */}
+              {plateCode(scrubThumb && scrub ? scrub : shownDate)}
             </p>
           )}
           {result === null && (

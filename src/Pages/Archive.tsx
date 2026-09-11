@@ -84,7 +84,7 @@ const MonthIndex: React.FC<{ month: string; today: string }> = ({ month, today }
           </div>
           <ol
             aria-busy={result === null}
-            className="mt-6 border-t border-line md:mt-0 md:grid md:grid-cols-7 md:border-l md:border-t-0"
+            className="md:grid md:grid-cols-7 md:border-l md:border-line"
           >
             {days.map((day) => (
               <DayCell
@@ -123,44 +123,46 @@ const MonthHeader: React.FC<{ month: string; today: string; title: string }> = (
         <span className="sr-only">{t('archive.title')}: </span>
         {title}
       </h1>
-      <nav aria-label={t('archive.title')} className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          className="control w-12 px-0"
-          disabled={month <= FIRST_MONTH}
-          onClick={() => go(shiftMonth(month, -1))}
-          aria-label={t('archive.prev')}
-          title={t('archive.prev')}
-        >
-          <BiChevronLeft aria-hidden="true" className="h-5 w-5" />
-        </button>
-        <SelectControl label={t('archive.month')} value={mm} onChange={(v) => go(`${year}-${v}`)}>
-          {Array.from({ length: 12 }, (_, i) => {
-            const value = String(i + 1).padStart(2, '0');
-            return (
-              <option key={value} value={value}>
-                {capitalize(formatApodDate(`2024-${value}-01`, locale, { month: 'long' }))}
+      <nav aria-label={t('archive.title')} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="control w-12 shrink-0 px-0"
+            disabled={month <= FIRST_MONTH}
+            onClick={() => go(shiftMonth(month, -1))}
+            aria-label={t('archive.prev')}
+            title={t('archive.prev')}
+          >
+            <BiChevronLeft aria-hidden="true" className="h-5 w-5" />
+          </button>
+          <SelectControl label={t('archive.month')} value={mm} onChange={(v) => go(`${year}-${v}`)} className="min-w-0 flex-1 sm:flex-none">
+            {Array.from({ length: 12 }, (_, i) => {
+              const value = String(i + 1).padStart(2, '0');
+              return (
+                <option key={value} value={value}>
+                  {capitalize(formatApodDate(`2024-${value}-01`, locale, { month: 'long' }))}
+                </option>
+              );
+            })}
+          </SelectControl>
+          <SelectControl label={t('archive.year')} value={year} onChange={(v) => go(`${v}-${mm}`)}>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
               </option>
-            );
-          })}
-        </SelectControl>
-        <SelectControl label={t('archive.year')} value={year} onChange={(v) => go(`${v}-${mm}`)}>
-          {years.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </SelectControl>
-        <button
-          type="button"
-          className="control w-12 px-0"
-          disabled={month >= lastMonth}
-          onClick={() => go(shiftMonth(month, 1))}
-          aria-label={t('archive.next')}
-          title={t('archive.next')}
-        >
-          <BiChevronRight aria-hidden="true" className="h-5 w-5" />
-        </button>
+            ))}
+          </SelectControl>
+          <button
+            type="button"
+            className="control w-12 shrink-0 px-0"
+            disabled={month >= lastMonth}
+            onClick={() => go(shiftMonth(month, 1))}
+            aria-label={t('archive.next')}
+            title={t('archive.next')}
+          >
+            <BiChevronRight aria-hidden="true" className="h-5 w-5" />
+          </button>
+        </div>
         <a
           href="https://apod.nasa.gov/apod/archivepix.html"
           target="_blank"
@@ -180,17 +182,18 @@ const SelectControl: React.FC<{
   value: string;
   onChange: (value: string) => void;
   children: React.ReactNode;
-}> = ({ label, value, onChange, children }) => (
-  <label className="control relative pr-9 focus-within:border-star">
+  className?: string;
+}> = ({ label, value, onChange, children, className = '' }) => (
+  <label className={`control relative pr-8 focus-within:border-star ${className}`}>
     <span className="sr-only">{label}</span>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="cursor-pointer appearance-none bg-transparent uppercase text-star focus-visible:outline-none"
+      className="w-full min-w-0 cursor-pointer appearance-none bg-transparent uppercase text-star focus-visible:outline-none"
     >
       {children}
     </select>
-    <BiChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 h-4 w-4 text-muted" />
+    <BiChevronDown aria-hidden="true" className="pointer-events-none absolute right-2.5 h-4 w-4 text-muted" />
   </label>
 );
 
@@ -211,15 +214,24 @@ const DayCell: React.FC<DayCellProps> = ({ date, item, status, isToday, offset }
   const weekday = formatApodDate(date, locale, { weekday: 'short' });
   const style = offset ? ({ '--offset': offset + 1 } as React.CSSProperties) : undefined;
   const base = 'border-b border-line md:border-r md:[grid-column-start:var(--offset,auto)]';
+  const thumb = item && thumbnailOf(item);
   const number = (
     <span className={`notation ${isToday ? 'text-red' : 'text-muted group-hover:text-star'}`}>
       {day}
-      <span className="md:hidden"> · {weekday}</span>
+      <span className="md:hidden">
+        {' '}
+        · {weekday}
+        {item && !thumb && ` · ${t('day.other')}`}
+      </span>
     </span>
   );
 
   if (status === 'outside') {
-    return <li aria-hidden="true" style={style} className={`${base} hidden min-h-40 md:block`} />;
+    return (
+      <li aria-hidden="true" style={style} className={`${base} hidden min-h-40 p-3 md:block`}>
+        <span className="notation text-faint">{day}</span>
+      </li>
+    );
   }
   if (status !== 'ready' || !item) {
     return (
@@ -231,7 +243,6 @@ const DayCell: React.FC<DayCellProps> = ({ date, item, status, isToday, offset }
     );
   }
 
-  const thumb = thumbnailOf(item);
   return (
     <li style={style} className={base}>
       <Link
@@ -249,6 +260,11 @@ const DayCell: React.FC<DayCellProps> = ({ date, item, status, isToday, offset }
               className="h-full w-full object-cover opacity-80 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
               style={isTransitioning ? { viewTransitionName: 'plate' } : undefined}
             />
+          )}
+          {!thumb && (
+            <span className="notation absolute inset-0 hidden items-center justify-center p-2 text-center text-faint md:flex">
+              {t('day.other')}
+            </span>
           )}
           {item.media_type === 'video' && (
             <span className="notation absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 bg-ink px-1.5 text-star">
