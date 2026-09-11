@@ -10,7 +10,7 @@ export const NotFound: React.FC = () => {
   return (
     <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
       <EmptyPlate className="min-h-[60svh]" title={t('notFound.title')} body={t('notFound.body')}>
-        <Link to="/" className="control control-red">
+        <Link to="/" className="control">
           {t('nav.today')}
         </Link>
         <Link to="/archive" className="control">

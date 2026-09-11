@@ -2,14 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
 
-// Responses recorded from api.nasa.gov (see e2e/fixtures). The public DEMO_KEY allows
-// 10 requests per hour, so live calls would make the suite flaky; these are the real payloads.
-const dir = path.join(import.meta.dirname, 'fixtures');
-const load = (name: string) => JSON.parse(fs.readFileSync(path.join(dir, `${name}.json`), 'utf8'));
-
+// A real response recorded from api.nasa.gov on 2026-09-11. The public DEMO_KEY allows about
+// 10 requests per hour, so live calls would make the suite flaky. Any other date answers 404,
+// exactly as NASA does for a day without a picture.
 export const TODAY = '2026-09-11';
-export const today = load(TODAY);
-export const september: { date: string; title: string }[] = load('2026-09');
+export const today = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'fixtures', `${TODAY}.json`), 'utf8'));
 
 const json = (body: unknown, status = 200) => ({
   status,
@@ -18,7 +15,7 @@ const json = (body: unknown, status = 200) => ({
   body: JSON.stringify(body),
 });
 
-/** Serves the recorded archive; `rateLimited` answers every request with HTTP 429 instead. */
+/** Serves the recorded day; `rateLimited` answers every request with HTTP 429 instead. */
 export async function serveNasa(page: Page, { rateLimited = false } = {}) {
   await page.clock.setFixedTime(new Date(`${TODAY}T15:00:00Z`));
   await page.route('https://api.nasa.gov/**', (route) => {
@@ -26,9 +23,9 @@ export async function serveNasa(page: Page, { rateLimited = false } = {}) {
     const url = new URL(route.request().url());
     const date = url.searchParams.get('date');
     const start = url.searchParams.get('start_date');
-    if (start?.startsWith('2026-09')) return route.fulfill(json(september));
-    const item = date ? september.find((d) => d.date === date) : today;
-    return route.fulfill(item ? json(item) : json({ msg: 'No data available for date' }, 404));
+    if (start?.startsWith(TODAY.slice(0, 7))) return route.fulfill(json([today]));
+    if (!date || date === TODAY) return route.fulfill(json(today));
+    return route.fulfill(json({ code: 404, msg: 'No data available for date' }, 404));
   });
   // Keep image hosts out of the test: a 1px PNG stands in for every picture.
   await page.route(/wsrv\.nl|apod\.nasa\.gov\/apod\/image|img\.youtube\.com/, (route) =>

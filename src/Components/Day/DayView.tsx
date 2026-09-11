@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BiChevronLeft, BiChevronRight, BiLinkExternal, BiShuffle } from 'react-icons/bi';
 import { ApodItem } from '../../contracts/apod.contract';
 import { useApodDay, usePrefetchMonth } from '../../Hooks/useApod';
 import { useDocumentTitle } from '../../Hooks/useDocumentTitle';
 import { useI18n } from '../../i18n/I18n';
-import { ApodErrorKind } from '../../services/nasa.service';
+import { ApodErrorKind, peekMonth, thumbnailOf } from '../../services/nasa.service';
 import {
   APOD_FIRST_DATE,
   apodToday,
@@ -19,13 +19,15 @@ import {
   randomApodDate,
   shiftDay,
 } from '../../utils/date';
+import { THUMB_WIDTH, optimizedImageUrl } from '../../utils/imageOptimizer';
 import { EmptyPlate, Plate, PlateMedia } from '../Plate/Plate';
 import { ShareMenu } from '../Share/ShareMenu';
 import { DateRuler } from './DateRuler';
 
 // First viewport: the plate takes what the header and the ruler leave, within sane bounds.
 // Phones get a square plate (the best fit for pictures of unknown shape).
-const PLATE_SIZE = 'aspect-square max-h-[70svh] w-full lg:aspect-auto lg:max-h-none lg:h-[clamp(26rem,calc(100svh-var(--header-h)-10.5rem),56rem)]';
+const PLATE_SIZE =
+  'aspect-square max-h-[70svh] w-full lg:aspect-auto lg:max-h-none lg:h-[clamp(26rem,calc(100svh-var(--header-h)-10.5rem),56rem)]';
 
 /** One day of the atlas. `date` undefined means the latest published picture. */
 export const DayView: React.FC<{ date?: string }> = ({ date }) => {
@@ -35,9 +37,12 @@ export const DayView: React.FC<{ date?: string }> = ({ date }) => {
   const item = result?.data ?? null;
   const shownDate = item?.date ?? date;
   const today = apodToday();
+  // The day under the ruler's cursor while dragging, before release.
+  const [scrub, setScrub] = useState<string | null>(null);
 
   usePrefetchMonth(shownDate && monthOf(shownDate));
   useDocumentTitle(item?.title ?? t('title.today'));
+  useEffect(() => setScrub(null), [shownDate]);
 
   // Day-to-day travel keeps the scroll position: the plate stays put while the ruler is in use.
   const go = useCallback((d: string) => navigate(`/apod/${d}`, { preventScrollReset: true }), [navigate]);
@@ -55,13 +60,17 @@ export const DayView: React.FC<{ date?: string }> = ({ date }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [shownDate, today, go]);
 
+  const scrubItem = scrub && scrub !== shownDate ? peekMonth(monthOf(scrub))?.find((d) => d.date === scrub) : undefined;
+  const scrubThumb = scrubItem && thumbnailOf(scrubItem);
+
   return (
     <article className="mx-auto max-w-[90rem] px-4 pt-6 sm:px-6 lg:px-10">
-      <div className="grid gap-x-10 gap-y-6 lg:grid-cols-12">
-        <div className="relative lg:col-span-8 lg:pl-8">
+      {/* DOM order is the phone's reading order: plate, ruler, notation. Desktop places the ruler under the plate and the notation beside it. */}
+      <div className="grid gap-x-10 gap-y-6 lg:grid-cols-12 lg:gap-y-4">
+        <div className="relative lg:col-span-8 lg:row-start-1 lg:pl-8">
           {shownDate && (
             <p aria-hidden="true" className="vertical-notation notation absolute left-0 top-0 hidden text-faint lg:block">
-              {plateCode(shownDate)}
+              {plateCode(scrub ?? shownDate)}
             </p>
           )}
           {result === null && (
@@ -74,15 +83,61 @@ export const DayView: React.FC<{ date?: string }> = ({ date }) => {
           {result?.error && <ErrorPlate kind={result.error} date={date} onRetry={retry} onGo={go} />}
           {item && (
             <Plate className={PLATE_SIZE}>
-              <PlateMedia item={item} />
+              <div className={`h-full w-full transition-opacity duration-200 ${scrub && scrub !== shownDate ? 'opacity-30' : ''}`}>
+                <PlateMedia item={item} />
+              </div>
+              {scrubThumb && (
+                <img
+                  src={optimizedImageUrl(scrubThumb, THUMB_WIDTH)}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 h-full w-full scale-105 object-contain opacity-80 blur-md"
+                />
+              )}
             </Plate>
           )}
         </div>
 
-        <div className="lg:col-span-4">{item ? <Margin item={item} isToday={item.date === today} /> : <DateNotation date={shownDate} />}</div>
-      </div>
+        {shownDate && (
+          <nav aria-label={t('day.controls')} className="flex items-end gap-3 lg:col-span-8 lg:col-start-1 lg:row-start-2 lg:pl-8">
+            <button
+              type="button"
+              className="control hidden w-12 px-0 lg:inline-flex"
+              disabled={shownDate <= APOD_FIRST_DATE}
+              onClick={() => go(shiftDay(shownDate, -1))}
+              aria-label={t('day.prev')}
+              title={t('day.prev')}
+            >
+              <BiChevronLeft aria-hidden="true" className="h-5 w-5" />
+            </button>
+            <DateRuler date={shownDate} onPreview={setScrub} onCommit={go} />
+            <button
+              type="button"
+              className="control hidden w-12 px-0 lg:inline-flex"
+              disabled={shownDate >= today}
+              onClick={() => go(shiftDay(shownDate, 1))}
+              aria-label={t('day.next')}
+              title={t('day.next')}
+            >
+              <BiChevronRight aria-hidden="true" className="h-5 w-5" />
+            </button>
+          </nav>
+        )}
 
-      {shownDate && <DayControls date={shownDate} today={today} go={go} />}
+        <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1">
+          {item ? <Margin item={item} isToday={item.date === today} /> : <DateNotation date={shownDate} />}
+        </div>
+
+        {shownDate && (
+          <div className="hidden items-end gap-3 lg:col-span-4 lg:col-start-9 lg:row-start-2 lg:flex">
+            <DateField date={shownDate} today={today} go={go} className="flex-1" />
+            <button type="button" className="control" onClick={() => go(randomApodDate(today))}>
+              <BiShuffle aria-hidden="true" className="h-4 w-4" />
+              {t('day.random')}
+            </button>
+          </div>
+        )}
+      </div>
 
       {item?.explanation && (
         <section aria-labelledby="explanation" className="mt-12 grid gap-6 border-t border-line py-10 lg:grid-cols-12 lg:gap-10 lg:py-16">
@@ -123,6 +178,20 @@ const DateNotation: React.FC<{ date?: string }> = ({ date }) => {
   );
 };
 
+const NotationLink: React.FC<{ href?: string; to?: string; children: React.ReactNode }> = ({ href, to, children }) => {
+  const className = 'link notation inline-flex min-h-12 items-center gap-2 text-muted hover:text-star';
+  return to ? (
+    <Link to={to} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      {children}
+      <BiLinkExternal aria-hidden="true" className="h-4 w-4" />
+    </a>
+  );
+};
+
 const Margin: React.FC<{ item: ApodItem; isToday: boolean }> = ({ item, isToday }) => {
   const { t, locale } = useI18n();
   const hours = isToday ? hoursUntilNextApod() : 0;
@@ -140,30 +209,24 @@ const Margin: React.FC<{ item: ApodItem; isToday: boolean }> = ({ item, isToday 
           <span lang="en">{item.copyright}</span>
         </p>
       )}
-      <div className="mt-8 flex flex-wrap gap-3">
-        <ShareMenu
-          title={item.title}
-          url={shareUrl}
-          dateLabel={formatApodDate(item.date, locale, { dateStyle: 'long' })}
-        />
-        {item.hdurl && (
-          <a href={item.hdurl} target="_blank" rel="noopener noreferrer" className="control">
-            {t('day.hd')}
-            <BiLinkExternal aria-hidden="true" className="h-4 w-4 text-muted" />
-          </a>
-        )}
-        <a href={officialApodUrl(item.date)} target="_blank" rel="noopener noreferrer" className="control">
-          {t('day.official')}
-          <BiLinkExternal aria-hidden="true" className="h-4 w-4 text-muted" />
-        </a>
+      <div className="mt-8 self-start">
+        <ShareMenu title={item.title} url={shareUrl} dateLabel={formatApodDate(item.date, locale, { dateStyle: 'long' })} />
       </div>
-      <Link to={`/archive/${monthOf(item.date)}`} className="link notation mt-4 inline-flex min-h-12 items-center self-start text-muted">
-        {t('day.month')}
-      </Link>
+      <ul className="mt-3 flex flex-col">
+        {item.hdurl && (
+          <li>
+            <NotationLink href={item.hdurl}>{t('day.hd')}</NotationLink>
+          </li>
+        )}
+        <li>
+          <NotationLink href={officialApodUrl(item.date)}>{t('day.official')}</NotationLink>
+        </li>
+        <li>
+          <NotationLink to={`/archive/${monthOf(item.date)}`}>{t('day.month')}</NotationLink>
+        </li>
+      </ul>
       {isToday && (
-        <p className="notation mt-auto pt-6 text-faint">
-          {hours <= 1 ? t('day.nextApodSoon') : t('day.nextApod', { h: hours })}
-        </p>
+        <p className="notation mt-auto pt-6 text-faint">{hours <= 1 ? t('day.nextApodSoon') : t('day.nextApod', { h: hours })}</p>
       )}
     </header>
   );
@@ -180,7 +243,7 @@ const ErrorPlate: React.FC<{
   return (
     <EmptyPlate className={PLATE_SIZE} title={t(`error.${kind}.title`)} body={t(`error.${kind}.body`)}>
       {(kind === 'rate-limit' || kind === 'network') && (
-        <button type="button" className="control control-red" onClick={onRetry}>
+        <button type="button" className="control" onClick={onRetry}>
           {t('error.retry')}
         </button>
       )}
@@ -222,46 +285,6 @@ const DateField: React.FC<ControlsProps & { className?: string }> = ({ date, tod
         onChange={(e) => isValidApodDate(e.target.value, today) && go(e.target.value)}
       />
     </label>
-  );
-};
-
-/** Desktop: previous, the ruler, next, then date and random under the margin. Mobile: just the ruler. */
-const DayControls: React.FC<ControlsProps> = (props) => {
-  const { t } = useI18n();
-  const { date, today, go } = props;
-  return (
-    <nav aria-label={t('day.controls')} className="mt-6 grid items-end gap-x-10 gap-y-4 lg:mt-4 lg:grid-cols-12">
-      <div className="flex items-end gap-3 lg:col-span-8 lg:pl-8">
-        <button
-          type="button"
-          className="control hidden w-12 px-0 lg:inline-flex"
-          disabled={date <= APOD_FIRST_DATE}
-          onClick={() => go(shiftDay(date, -1))}
-          aria-label={t('day.prev')}
-          title={t('day.prev')}
-        >
-          <BiChevronLeft aria-hidden="true" className="h-5 w-5" />
-        </button>
-        <DateRuler date={date} onCommit={go} />
-        <button
-          type="button"
-          className="control hidden w-12 px-0 lg:inline-flex"
-          disabled={date >= today}
-          onClick={() => go(shiftDay(date, 1))}
-          aria-label={t('day.next')}
-          title={t('day.next')}
-        >
-          <BiChevronRight aria-hidden="true" className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="hidden gap-3 lg:col-span-4 lg:flex">
-        <DateField {...props} className="flex-1" />
-        <button type="button" className="control" onClick={() => go(randomApodDate(today))}>
-          <BiShuffle aria-hidden="true" className="h-4 w-4" />
-          {t('day.random')}
-        </button>
-      </div>
-    </nav>
   );
 };
 

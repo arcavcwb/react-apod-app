@@ -15,7 +15,7 @@ export const Day: React.FC = () => {
     return (
       <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
         <EmptyPlate className="min-h-[60svh]" title={t('error.invalid.title')} body={t('error.invalid.body')}>
-          <Link to="/" className="control control-red">
+          <Link to="/" className="control">
             {t('error.today')}
           </Link>
           <Link to="/archive" className="control">

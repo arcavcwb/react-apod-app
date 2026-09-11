@@ -43,9 +43,29 @@ export const Header: React.FC = () => {
           </ul>
         </nav>
 
-        {/* The native select stays on top (transparent) for keyboard, touch and screen readers;
-            the visible face shows the short code so the header fits a phone. */}
-        <label className="relative flex min-h-12 min-w-12 items-center gap-1 pl-3 text-star focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-red">
+        {/* Wide screens show every language; phones get a native select with a short face. */}
+        <div role="group" aria-label={t('lang.label')} className="hidden md:flex">
+          {LOCALES.map((l) => (
+            <button
+              key={l}
+              type="button"
+              lang={l}
+              aria-pressed={locale === l}
+              title={LOCALE_NAMES[l].name}
+              onClick={() => setLocale(l)}
+              className={`notation relative min-h-12 min-w-12 px-2 transition-colors ${
+                locale === l
+                  ? 'text-star after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:bg-red'
+                  : 'text-muted hover:text-star'
+              }`}
+            >
+              <span aria-hidden="true">{LOCALE_NAMES[l].short}</span>
+              <span className="sr-only">{LOCALE_NAMES[l].name}</span>
+            </button>
+          ))}
+        </div>
+        {/* The native select stays on top (transparent) for keyboard, touch and screen readers. */}
+        <label className="relative flex min-h-12 min-w-12 items-center gap-1 pl-3 text-star focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-red md:hidden">
           <span className="sr-only">{t('lang.label')}</span>
           <span aria-hidden="true" className="notation">
             {LOCALE_NAMES[locale].short}

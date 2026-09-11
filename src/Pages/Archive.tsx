@@ -33,7 +33,7 @@ export const Archive: React.FC = () => {
     return (
       <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
         <EmptyPlate className="min-h-[60svh]" title={t('error.invalid.title')} body={t('error.invalid.body')}>
-          <Link to="/archive" className="control control-red">
+          <Link to="/archive" className="control">
             {t('nav.archive')}
           </Link>
         </EmptyPlate>
@@ -65,7 +65,7 @@ const MonthIndex: React.FC<{ month: string; today: string }> = ({ month, today }
       {result?.error ? (
         <EmptyPlate className="mt-8 min-h-[50svh]" title={t(`error.${result.error}.title`)} body={t(`error.${result.error}.body`)}>
           {(result.error === 'rate-limit' || result.error === 'network') && (
-            <button type="button" className="control control-red" onClick={retry}>
+            <button type="button" className="control" onClick={retry}>
               {t('error.retry')}
             </button>
           )}
@@ -186,7 +186,7 @@ const SelectControl: React.FC<{
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="cursor-pointer appearance-none bg-transparent text-star focus-visible:outline-none"
+      className="cursor-pointer appearance-none bg-transparent uppercase text-star focus-visible:outline-none"
     >
       {children}
     </select>

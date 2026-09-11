@@ -67,7 +67,8 @@ export const PlateMedia: React.FC<{ item: ApodItem }> = ({ item }) => {
  */
 const PlateImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
   const { t } = useI18n();
-  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+  // resolving: the sharp image animates in over the blurred one, which stays until it finishes.
+  const [status, setStatus] = useState<'loading' | 'resolving' | 'done' | 'error'>('loading');
   const [raw, setRaw] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -102,20 +103,22 @@ const PlateImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
   }
 
   return (
-    <>
+    // The sharp image is sized to its own box (not letterboxed by object-fit), so its 1px
+    // neat-line traces the picture's real edge instead of leaving a seam against the field.
+    <div className="flex h-full w-full items-center justify-center">
+      {status !== 'done' && (
+        <img
+          src={optimizedImageUrl(src, THUMB_WIDTH)}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full scale-105 object-contain opacity-70 blur-lg"
+          style={{ viewTransitionName: 'plate' }}
+        />
+      )}
       {status === 'loading' && (
-        <>
-          <img
-            src={optimizedImageUrl(src, THUMB_WIDTH)}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full scale-105 object-contain opacity-70 blur-lg"
-            style={{ viewTransitionName: 'plate' }}
-          />
-          <p className="notation absolute bottom-3 left-3 text-faint" role="status">
-            {t('image.loading')}
-          </p>
-        </>
+        <p className="notation absolute bottom-3 left-3 text-faint" role="status">
+          {t('image.loading')}
+        </p>
       )}
       <img
         key={attempt}
@@ -128,13 +131,14 @@ const PlateImage: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
         decoding="async"
         // React 18 has no fetchPriority prop; the lowercase attribute passes through.
         {...({ fetchpriority: 'high' } as Record<string, string>)}
-        onLoad={() => setStatus('loaded')}
+        onLoad={() => setStatus('resolving')}
+        onAnimationEnd={() => setStatus('done')}
         onError={handleError}
-        className={`relative h-full w-full object-contain ${
-          status === 'loaded' ? 'animate-[focus-pull_700ms_cubic-bezier(0.16,1,0.3,1)_both]' : 'opacity-0'
-        }`}
-        style={status === 'loaded' ? { viewTransitionName: 'plate' } : undefined}
+        className={`relative max-h-full max-w-full object-contain ${
+          status === 'loading' ? 'opacity-0' : 'outline outline-1 outline-line'
+        } ${status === 'resolving' ? 'animate-[focus-pull_700ms_cubic-bezier(0.16,1,0.3,1)_both]' : ''}`}
+        style={status === 'done' ? { viewTransitionName: 'plate' } : undefined}
       />
-    </>
+    </div>
   );
 };

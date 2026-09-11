@@ -103,12 +103,6 @@
   .control[aria-disabled='true'] {
     @apply cursor-not-allowed border-line text-faint;
   }
-  .control-red {
-    @apply border-red bg-red text-ink;
-  }
-  .control-red:hover {
-    @apply border-star bg-star;
-  }
 
   .link {
     @apply text-star underline decoration-line-strong transition-colors hover:decoration-red;
@@ -190,8 +184,8 @@
     cursor: default;
   }
 
+  /* color-scheme: dark already draws a light picker icon; only the cursor needs setting. */
   .date-field::-webkit-calendar-picker-indicator {
-    filter: invert(0.85);
     cursor: pointer;
   }
 }
