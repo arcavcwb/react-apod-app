@@ -33,3 +33,9 @@ playwright-report/
 test-results/
 .playwright-mcp/
 
+
+# Impeccable session artifacts
+.impeccable/questions/
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/live/

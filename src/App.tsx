@@ -1,28 +1,35 @@
-import React, { useState } from "react";
-import { Routes, Route } from "react-router-dom";
-import { Layout } from "./Components/Layout/Layout";
-import { Home } from "./Pages/Home";
-import { Apod } from "./Pages/Apod";
-import { Gallery } from "./Pages/Gallery";
-import { About } from "./Pages/About";
+import React from 'react';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Layout } from './Components/Layout/Layout';
+import { I18nProvider } from './i18n/I18n';
+import { About } from './Pages/About';
+import { Archive } from './Pages/Archive';
+import { Day, LegacyApodRedirect } from './Pages/Day';
+import { Home } from './Pages/Home';
+import { NotFound } from './Pages/NotFound';
 
-const App: React.FC = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+export const routes = [
+  {
+    element: <Layout />,
+    children: [
+      { path: '/', element: <Home /> },
+      { path: '/apod', element: <LegacyApodRedirect /> },
+      { path: '/apod/:date', element: <Day /> },
+      { path: '/archive', element: <Archive /> },
+      { path: '/archive/:month', element: <Archive /> },
+      { path: '/gallery', element: <Navigate to="/archive" replace /> },
+      { path: '/about', element: <About /> },
+      { path: '*', element: <NotFound /> },
+    ],
+  },
+];
 
-  const openHandler = () => {
-    setIsOpen((prev) => !prev);
-  };
+const router = createBrowserRouter(routes);
 
-  return (
-    <Layout isOpen={isOpen} openHandler={openHandler}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/apod" element={<Apod />} />
-        <Route path="/gallery" element={<Gallery />} />
-        <Route path="/about" element={<About />} />
-      </Routes>
-    </Layout>
-  );
-};
+const App: React.FC = () => (
+  <I18nProvider>
+    <RouterProvider router={router} />
+  </I18nProvider>
+);
 
 export default App;
