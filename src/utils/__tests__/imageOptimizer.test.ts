@@ -1,20 +1,21 @@
-import { describe, it, expect } from 'vitest';
-import { getOptimizedImageUrl } from '../imageOptimizer';
+import { describe, expect, it } from 'vitest';
+import { optimizedImageUrl, optimizedSrcSet } from '../imageOptimizer';
 
-describe('imageOptimizer Utility', () => {
-  it('preserves local assets, data URIs and svgs untouched', () => {
-    expect(getOptimizedImageUrl('/assets/local.png')).toBe('/assets/local.png');
-    expect(getOptimizedImageUrl('data:image/png;base64,...')).toBe('data:image/png;base64,...');
-    expect(getOptimizedImageUrl('https://example.com/vector.svg')).toBe('https://example.com/vector.svg');
+describe('imageOptimizer', () => {
+  const raw = 'https://apod.nasa.gov/apod/image/2609/M83.jpg';
+
+  it('leaves local, svg and gif sources untouched', () => {
+    expect(optimizedImageUrl('/favicon.svg', 400)).toBe('/favicon.svg');
+    expect(optimizedImageUrl('https://apod.nasa.gov/a.gif', 400)).toBe('https://apod.nasa.gov/a.gif');
   });
 
-  it('generates edge cdn webp url with target width and quality in local dev', () => {
-    const raw = 'https://apod.nasa.gov/apod/image/test.jpg';
-    const optimized = getOptimizedImageUrl(raw, { width: 600, quality: 80 });
+  it('resizes through wsrv.nl on localhost', () => {
+    const url = optimizedImageUrl(raw, 480);
+    expect(url).toContain('https://wsrv.nl/?url=' + encodeURIComponent(raw));
+    expect(url).toContain('w=480');
+  });
 
-    expect(optimized).toContain('wsrv.nl');
-    expect(optimized).toContain('w=600');
-    expect(optimized).toContain('output=webp');
-    expect(optimized).toContain(encodeURIComponent(raw));
+  it('builds a width-described srcset', () => {
+    expect(optimizedSrcSet(raw, [960, 1600]).split(', ').map((s) => s.split(' ')[1])).toEqual(['960w', '1600w']);
   });
 });

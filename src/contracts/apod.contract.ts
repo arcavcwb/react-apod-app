@@ -1,41 +1,31 @@
 import { z } from 'zod';
 
-const sanitizeHttps = (val?: string | null) => {
-  if (!val) return val;
-  return val.replace(/^http:\/\//i, 'https://');
-};
+// NASA still serves some media over http; the CSP only allows https.
+const toHttps = (v: string) => v.trim().replace(/^http:\/\//i, 'https://');
 
-const safeHttpsUrlSchema = z
+const httpsUrl = z
   .string()
-  .transform((v) => sanitizeHttps(v) as string)
-  .pipe(z.string().url('URL de medio inválida'))
-  .refine((url) => url.startsWith('https://'), {
-    message: 'El protocolo de medio debe ser estrictamente HTTPS',
-  });
+  .transform(toHttps)
+  .pipe(z.url({ protocol: /^https$/, error: 'Media URL must be https' }));
 
-const optionalSafeHttpsUrlSchema = z
+// Credits arrive with stray line breaks ("\nAldo Zanetti\n").
+const credit = z
   .string()
-  .optional()
-  .nullable()
-  .transform(sanitizeHttps)
-  .pipe(z.string().url().optional().nullable())
-  .refine((url) => !url || url.startsWith('https://'), {
-    message: 'El protocolo de medio debe ser estrictamente HTTPS',
-  });
+  .transform((v) => v.replace(/\s+/g, ' ').trim())
+  .transform((v) => v || undefined);
 
 export const ApodItemSchema = z.object({
-  title: z.string().default('Sin título'),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha inválido (YYYY-MM-DD)'),
-  explanation: z.string().default('Sin descripción astronómica disponible.'),
-  media_type: z.enum(['image', 'video']).or(z.string()).default('image'),
-  url: safeHttpsUrlSchema,
-  hdurl: optionalSafeHttpsUrlSchema,
-  thumbnail_url: optionalSafeHttpsUrlSchema,
-  copyright: z.string().optional().nullable(),
-  service_version: z.string().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+  title: z.string().trim().catch('Untitled'),
+  explanation: z.string().trim().catch(''),
+  // "other" covers interactive days that have no url at all.
+  media_type: z.enum(['image', 'video', 'other']).catch('other'),
+  url: httpsUrl.optional().catch(undefined),
+  hdurl: httpsUrl.optional().catch(undefined),
+  thumbnail_url: httpsUrl.optional().catch(undefined),
+  copyright: credit.optional().catch(undefined),
 });
 
 export type ApodItem = z.infer<typeof ApodItemSchema>;
 
-export const ApodGallerySchema = z.array(ApodItemSchema);
-export type ApodGallery = z.infer<typeof ApodGallerySchema>;
+export const ApodListSchema = z.array(ApodItemSchema);

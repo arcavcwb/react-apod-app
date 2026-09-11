@@ -1,323 +1,154 @@
-import { ApodItem, ApodItemSchema, ApodGallery, ApodGallerySchema } from '../contracts/apod.contract';
-import { getCuratedApod, getCuratedGallery } from './curatedApod';
+import { ApodItem, ApodItemSchema, ApodListSchema } from '../contracts/apod.contract';
+import { apodToday, monthOf, monthRange } from '../utils/date';
 
-const NASA_BASE_URL = 'https://api.nasa.gov/planetary/apod';
-const REQUEST_TIMEOUT_MS = 8000; // Tolerancia de 8s para absorber latencias de red pública
-const CIRCUIT_BREAKER_KEY = 'nasa_circuit_breaker_until';
-const CIRCUIT_BREAKER_DURATION_MS = 10 * 60 * 1000; // 10 minutos de protección ante 429
+const API_URL = 'https://api.nasa.gov/planetary/apod';
+const TIMEOUT_MS = 10_000;
+const HOUR_MS = 3_600_000;
+const CACHE_PREFIX = 'apod:v3:';
 
-function getApiKey(): string {
-  const envKey = import.meta.env.VITE_NASA_API_KEY;
-  if (envKey && typeof envKey === 'string' && envKey.trim() !== '') {
-    return envKey.trim();
-  }
-  return 'DEMO_KEY';
+export type ApodErrorKind = 'rate-limit' | 'not-found' | 'network' | 'contract';
+export type ApodResult<T> = { data: T; error: null } | { data: null; error: ApodErrorKind };
+
+function apiKey(): string {
+  return import.meta.env.VITE_NASA_API_KEY?.trim() || 'DEMO_KEY';
 }
 
-export interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  isRateLimited?: boolean;
-  isFallback?: boolean;
-}
-
-// -------------------------------------------------------------
-// Circuit Breaker (Cero Esperas ante Cuota 429 de NASA)
-// -------------------------------------------------------------
-export function isCircuitBreakerOpen(): boolean {
-  try {
-    const raw = sessionStorage.getItem(CIRCUIT_BREAKER_KEY);
-    if (!raw) return false;
-    const until = parseInt(raw, 10);
-    if (Date.now() < until) return true;
-    sessionStorage.removeItem(CIRCUIT_BREAKER_KEY);
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-export function tripCircuitBreaker(): void {
-  try {
-    sessionStorage.setItem(CIRCUIT_BREAKER_KEY, (Date.now() + CIRCUIT_BREAKER_DURATION_MS).toString());
-  } catch {
-    // Ignorar si sessionStorage no está disponible
-  }
-}
-
-export function resetCircuitBreaker(): void {
-  try {
-    sessionStorage.removeItem(CIRCUIT_BREAKER_KEY);
-  } catch {
-    // Ignorar si sessionStorage no está disponible
-  }
-}
-
-// -------------------------------------------------------------
-// Utilidades de Caché en Cliente (localStorage)
-// -------------------------------------------------------------
-interface CacheEnvelope<T> {
-  timestamp: number;
-  ttl: number; // 0 = sin expiración (fechas históricas inmutables)
-  payload: T;
-}
-
-function getCacheKey(prefix: string, id: string): string {
-  return `apod_cache_v2_${prefix}_${id}`;
+// ---------------------------------------------------------------------------
+// localStorage cache. Past days and past months never change, so they are kept
+// forever; anything that includes "today" expires after an hour.
+// ---------------------------------------------------------------------------
+interface Envelope<T> {
+  expires: number | null;
+  value: T;
 }
 
 function readCache<T>(key: string): T | null {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
     if (!raw) return null;
-    const envelope: CacheEnvelope<T> = JSON.parse(raw);
-    if (envelope.ttl > 0 && Date.now() - envelope.timestamp > envelope.ttl) {
-      localStorage.removeItem(key);
-      return null;
-    }
-    return envelope.payload;
+    const { expires, value } = JSON.parse(raw) as Envelope<T>;
+    return expires === null || expires > Date.now() ? value : null;
   } catch {
     return null;
   }
 }
 
-function writeCache<T>(key: string, payload: T, ttl: number = 0): void {
+function writeCache<T>(key: string, value: T, ttl: number | null): void {
   try {
-    const envelope: CacheEnvelope<T> = {
-      timestamp: Date.now(),
-      ttl,
-      payload,
-    };
-    localStorage.setItem(key, JSON.stringify(envelope));
+    const envelope: Envelope<T> = { expires: ttl === null ? null : Date.now() + ttl, value };
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(envelope));
   } catch {
-    // Si localStorage está lleno o deshabilitado, continuar silenciosamente
+    // Storage full or disabled: the app still works, just without a cache.
   }
 }
 
-/**
- * Helper para resolver la miniatura óptima de un medio astronómico.
- * Si es un video de YouTube, deriva automáticamente la miniatura oficial en HD.
- */
-export function getMediaThumbnail(item: ApodItem): string {
+/** Drops caches from earlier versions, which could hold substitute images stored as real days. */
+export function purgeLegacyCache(): void {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('apod_cache_'))
+      .forEach((k) => localStorage.removeItem(k));
+    sessionStorage.removeItem('nasa_circuit_breaker_until');
+  } catch {
+    // ignore
+  }
+}
+
+const cacheDay = (item: ApodItem, today: string) => writeCache(`day:${item.date}`, item, item.date === today ? HOUR_MS : null);
+
+// Synchronous cache reads, so cached days render without a loading frame.
+export const peekMonth = (month: string) => readCache<ApodItem[]>(`month:${month}`);
+export const peekDay = (date: string) =>
+  readCache<ApodItem>(`day:${date}`) ?? peekMonth(monthOf(date))?.find((d) => d.date === date) ?? null;
+export const peekLatest = () => peekDay(apodToday()) ?? readCache<ApodItem>('latest');
+
+// ---------------------------------------------------------------------------
+// HTTP
+// ---------------------------------------------------------------------------
+async function request(params: Record<string, string>): Promise<ApodResult<unknown>> {
+  const url = new URL(API_URL);
+  url.searchParams.set('api_key', apiKey());
+  url.searchParams.set('thumbs', 'true');
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+
+  let response: Response;
+  try {
+    response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+  } catch {
+    return { data: null, error: 'network' };
+  }
+  if (response.status === 429) return { data: null, error: 'rate-limit' };
+  // The API answers 400 for dates outside the archive and 404 for days without a picture.
+  if (response.status === 400 || response.status === 404) return { data: null, error: 'not-found' };
+  if (!response.ok) return { data: null, error: 'network' };
+
+  try {
+    return { data: await response.json(), error: null };
+  } catch {
+    return { data: null, error: 'contract' };
+  }
+}
+
+/** Latest published picture. NASA may not have published "today" yet, so no date is sent. */
+export async function fetchLatestApod(): Promise<ApodResult<ApodItem>> {
+  const today = apodToday();
+  const cached = peekLatest();
+  if (cached) return { data: cached, error: null };
+
+  const res = await request({});
+  if (res.error) return res;
+  const parsed = ApodItemSchema.safeParse(res.data);
+  if (!parsed.success) {
+    console.error('[APOD contract]', parsed.error.issues);
+    return { data: null, error: 'contract' };
+  }
+  writeCache('latest', parsed.data, HOUR_MS);
+  cacheDay(parsed.data, today);
+  return { data: parsed.data, error: null };
+}
+
+export async function fetchApodByDate(date: string): Promise<ApodResult<ApodItem>> {
+  const today = apodToday();
+  const cached = peekDay(date);
+  if (cached) return { data: cached, error: null };
+
+  const res = await request({ date });
+  if (res.error) return res;
+  const parsed = ApodItemSchema.safeParse(res.data);
+  if (!parsed.success) {
+    console.error('[APOD contract]', parsed.error.issues);
+    return { data: null, error: 'contract' };
+  }
+  cacheDay(parsed.data, today);
+  return { data: parsed.data, error: null };
+}
+
+/** Every picture of a month in one request; also fills the per-day cache. */
+export async function fetchApodMonth(month: string): Promise<ApodResult<ApodItem[]>> {
+  const today = apodToday();
+  const cached = peekMonth(month);
+  if (cached) return { data: cached, error: null };
+
+  const { start, end } = monthRange(month, today);
+  const isCurrent = month === monthOf(today);
+  // Leaving end_date out lets NASA stop at its latest published day.
+  const res = await request(isCurrent ? { start_date: start } : { start_date: start, end_date: end });
+  if (res.error) return res;
+  const parsed = ApodListSchema.safeParse(res.data);
+  if (!parsed.success) {
+    console.error('[APOD contract]', parsed.error.issues);
+    return { data: null, error: 'contract' };
+  }
+  const items = parsed.data.filter((d) => monthOf(d.date) === month);
+  writeCache(`month:${month}`, items, isCurrent ? HOUR_MS : null);
+  items.forEach((item) => cacheDay(item, today));
+  return { data: items, error: null };
+}
+
+/** Thumbnail for grids: the video still when there is one, otherwise the image itself. */
+export function thumbnailOf(item: ApodItem): string | undefined {
+  if (item.media_type === 'image') return item.url;
   if (item.thumbnail_url) return item.thumbnail_url;
-  if (item.media_type === 'video' && item.url) {
-    const ytMatch = item.url.match(/(?:youtube\.com\/(?:embed\/|v\/|watch\?v=)|youtu\.be\/)([\w-]+)/i);
-    if (ytMatch && ytMatch[1]) {
-      return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
-    }
-  }
-  return item.url;
-}
-
-/**
- * Obtiene la Imagen Astronómica del Día de hoy con caché y fallback
- */
-export async function fetchTodayApod(forceRefresh = false): Promise<ApiResponse<ApodItem>> {
-  return fetchApodByDate(undefined, forceRefresh);
-}
-
-/**
- * Obtiene la Imagen Astronómica del Día para una fecha específica (YYYY-MM-DD).
- * Con Circuit Breaker: si la API de NASA está en 429, responde inmediatamente (0ms)
- * con el catálogo de respaldo curado, eliminando esperas y spinners congelados.
- */
-export async function fetchApodByDate(date?: string, forceRefresh = false): Promise<ApiResponse<ApodItem>> {
-  const isSpecificDate = !!date;
-  const cacheKey = getCacheKey('item', date || 'today');
-
-  if (forceRefresh) {
-    resetCircuitBreaker();
-    try {
-      localStorage.removeItem(cacheKey);
-    } catch {
-      // ignore
-    }
-  }
-
-  // 1. Verificar Caché en Cliente (Respuesta en 0ms)
-  const cached = readCache<ApodItem>(cacheKey);
-  if (cached) {
-    const parsed = ApodItemSchema.safeParse(cached);
-    if (parsed.success) {
-      return { data: parsed.data, error: null, isFallback: false };
-    }
-  }
-
-  // 2. Circuit Breaker activo: responder inmediatamente sin hacer llamada de red
-  if (isCircuitBreakerOpen() && !forceRefresh) {
-    const fallbackItem = getCuratedApod(date);
-    return {
-      data: fallbackItem,
-      error: null,
-      isRateLimited: true,
-      isFallback: true,
-    };
-  }
-
-  // 3. Preparar Petición con AbortController fail-fast (4s)
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  try {
-    const url = new URL(NASA_BASE_URL);
-    url.searchParams.set('api_key', getApiKey());
-    url.searchParams.set('thumbs', 'true');
-    if (date) {
-      url.searchParams.set('date', date);
-    }
-
-    const response = await fetch(url.toString(), {
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (response.status === 429) {
-      tripCircuitBreaker();
-      const fallbackItem = getCuratedApod(date);
-      writeCache(cacheKey, fallbackItem, 10 * 60 * 1000);
-      return {
-        data: fallbackItem,
-        error: null,
-        isRateLimited: true,
-        isFallback: true,
-      };
-    }
-
-    if (!response.ok) {
-      const fallbackItem = getCuratedApod(date);
-      return {
-        data: fallbackItem,
-        error: null,
-        isFallback: true,
-      };
-    }
-
-    const raw = await response.json();
-    const result = ApodItemSchema.safeParse(raw);
-
-    if (!result.success) {
-      console.error('[NASA Contract Discrepancy]:', result.error.format());
-      const fallbackItem = getCuratedApod(date);
-      return { data: fallbackItem, error: null, isFallback: true };
-    }
-
-    // Fechas históricas se cachean permanentemente; la de hoy por 6 horas
-    writeCache(cacheKey, result.data, isSpecificDate ? 0 : 6 * 60 * 60 * 1000);
-    return { data: result.data, error: null, isFallback: false };
-  } catch (err: any) {
-    clearTimeout(timeoutId);
-    if (err?.name !== 'AbortError') {
-      tripCircuitBreaker();
-    }
-    const fallbackItem = getCuratedApod(date);
-    writeCache(cacheKey, fallbackItem, 10 * 60 * 1000);
-    return {
-      data: fallbackItem,
-      error: null,
-      isFallback: true,
-      isRateLimited: true,
-    };
-  }
-}
-
-/**
- * Obtiene una colección aleatoria de imágenes espaciales para la galería.
- * Si el Circuit Breaker está abierto o la NASA responde con 429/timeout,
- * responde en 0ms con la colección curada sin congelar la interfaz.
- */
-export async function fetchRandomApods(count: number = 12, forceRefresh = false): Promise<ApiResponse<ApodGallery>> {
-  const cacheKey = getCacheKey('gallery', `count_${count}`);
-
-  if (forceRefresh) {
-    resetCircuitBreaker();
-    try {
-      localStorage.removeItem(cacheKey);
-    } catch {
-      // ignore
-    }
-  }
-
-  // 1. Revisar caché de galería (0ms)
-  const cached = readCache<ApodGallery>(cacheKey);
-  if (cached && Array.isArray(cached) && cached.length > 0) {
-    const parsed = ApodGallerySchema.safeParse(cached);
-    if (parsed.success) {
-      return { data: parsed.data, error: null, isFallback: false };
-    }
-  }
-
-  // 2. Circuit Breaker activo: responder inmediatamente sin red
-  if (isCircuitBreakerOpen() && !forceRefresh) {
-    return {
-      data: getCuratedGallery(count),
-      error: null,
-      isRateLimited: true,
-      isFallback: true,
-    };
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  try {
-    const url = new URL(NASA_BASE_URL);
-    url.searchParams.set('api_key', getApiKey());
-    url.searchParams.set('count', Math.min(count, 30).toString());
-    url.searchParams.set('thumbs', 'true');
-
-    const response = await fetch(url.toString(), {
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (response.status === 429) {
-      tripCircuitBreaker();
-      const fallbackGallery = getCuratedGallery(count);
-      writeCache(cacheKey, fallbackGallery, 10 * 60 * 1000);
-      return {
-        data: fallbackGallery,
-        error: null,
-        isRateLimited: true,
-        isFallback: true,
-      };
-    }
-
-    if (!response.ok) {
-      const fallbackGallery = getCuratedGallery(count);
-      return {
-        data: fallbackGallery,
-        error: null,
-        isFallback: true,
-      };
-    }
-
-    const raw = await response.json();
-    const result = ApodGallerySchema.safeParse(raw);
-
-    if (!result.success) {
-      console.error('[NASA Gallery Contract Discrepancy]:', result.error.format());
-      return {
-        data: getCuratedGallery(count),
-        error: null,
-        isFallback: true,
-      };
-    }
-
-    // Cachear resultado exitoso por 30 minutos
-    writeCache(cacheKey, result.data, 30 * 60 * 1000);
-    return { data: result.data, error: null, isFallback: false };
-  } catch (err: any) {
-    clearTimeout(timeoutId);
-    if (err?.name !== 'AbortError') {
-      tripCircuitBreaker();
-    }
-    const fallbackGallery = getCuratedGallery(count);
-    writeCache(cacheKey, fallbackGallery, 10 * 60 * 1000);
-    return {
-      data: fallbackGallery,
-      error: null,
-      isFallback: true,
-      isRateLimited: true,
-    };
-  }
+  const yt = item.url?.match(/(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([\w-]{6,})/i);
+  return yt ? `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg` : undefined;
 }

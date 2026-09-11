@@ -1,0 +1,403 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T13:51:38+00:00",
+  "title": "Design System: NASA APOD Explorer",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Printed Ink",
+        "canonical": "#0a0a0b",
+        "oklch": "oklch(14.5% 0.002 286.1)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#252526",
+          "#424243",
+          "#616162",
+          "#828283",
+          "#a5a5a6",
+          "#c9c9ca",
+          "#eeeef0"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink Wash",
+        "canonical": "#131315",
+        "oklch": "oklch(18.8% 0.004 286.0)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#252527",
+          "#424244",
+          "#616163",
+          "#828285",
+          "#a5a5a7",
+          "#c9c9cc",
+          "#eeeef1"
+        ]
+      },
+      "star": {
+        "role": "neutral",
+        "displayName": "Starlight",
+        "canonical": "#f2f0ea",
+        "oklch": "oklch(95.5% 0.008 91.5)",
+        "tonalRamp": [
+          "#0c0b07",
+          "#262521",
+          "#43423d",
+          "#63615c",
+          "#84827d",
+          "#a7a59f",
+          "#cbc9c3",
+          "#f0eee8"
+        ]
+      },
+      "copy": {
+        "role": "neutral",
+        "displayName": "Caption Paper",
+        "canonical": "#d9d6ce",
+        "oklch": "oklch(87.6% 0.011 89.7)",
+        "tonalRamp": [
+          "#0d0b06",
+          "#27251f",
+          "#44423b",
+          "#64615a",
+          "#85827b",
+          "#a8a59d",
+          "#ccc9c1",
+          "#f1eee6"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Notation Grey",
+        "canonical": "#a19f98",
+        "oklch": "oklch(70.2% 0.010 93.6)",
+        "tonalRamp": [
+          "#0d0b07",
+          "#27251f",
+          "#44423c",
+          "#63615b",
+          "#84827c",
+          "#a7a59e",
+          "#cbc9c2",
+          "#f1eee7"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint Notation",
+        "canonical": "#85837d",
+        "oklch": "oklch(61.0% 0.009 91.5)",
+        "tonalRamp": [
+          "#0d0b07",
+          "#272520",
+          "#44423d",
+          "#63615b",
+          "#84827c",
+          "#a7a59f",
+          "#cbc9c2",
+          "#f1eee8"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Graticule",
+        "canonical": "#2a2a2e",
+        "oklch": "oklch(28.7% 0.007 285.9)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#252528",
+          "#414146",
+          "#616165",
+          "#828287",
+          "#a4a4a9",
+          "#c8c8ce",
+          "#eeeef3"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Graticule Strong",
+        "canonical": "#66666d",
+        "oklch": "oklch(51.3% 0.011 286.0)",
+        "tonalRamp": [
+          "#0b0b10",
+          "#24242a",
+          "#414148",
+          "#606067",
+          "#818189",
+          "#a4a4ac",
+          "#c8c8d0",
+          "#edeef6"
+        ]
+      },
+      "red": {
+        "role": "primary",
+        "displayName": "Red Light",
+        "canonical": "#ff5a47",
+        "oklch": "oklch(68.6% 0.204 29.8)",
+        "tonalRamp": [
+          "#220000",
+          "#500000",
+          "#850000",
+          "#b90000",
+          "#e23e2e",
+          "#ff6f5c",
+          "#ffb0a1",
+          "#ffe6df"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles for the archive month and about."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The day's picture title in the margin, always lang=\"en\"."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Empty-plate titles and the orrery section heading."
+      },
+      "reading": {
+        "displayName": "Reading",
+        "purpose": "NASA explanations and about copy, max 66ch, 1.125rem below 1024px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Credits, empty-plate bodies, orrery descriptions."
+      },
+      "notation": {
+        "displayName": "Notation",
+        "purpose": "Spaced caps with tabular figures for dates, counts, codes, labels, nav, controls and links."
+      }
+    },
+    "shadows": [
+      {
+        "name": "popover-lift",
+        "value": "0 12px 32px rgba(0,0,0,0.6)",
+        "purpose": "Share popover only; the system is otherwise flat."
+      },
+      {
+        "name": "thumb-knockout",
+        "value": "0 0 0 0.3125rem var(--ink)",
+        "purpose": "Ink ring that cuts the ruler thumb out of the ticks; not elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Focus pull and other arrivals."
+      },
+      {
+        "name": "focus-pull",
+        "value": "700ms ease-out-expo; opacity 0 to 1, blur(10px) to blur(0)",
+        "purpose": "Sharp picture resolving over its blurred thumbnail."
+      },
+      {
+        "name": "control-state",
+        "value": "200ms",
+        "purpose": "Border and color changes on controls; scrub dim of the current picture to 30%."
+      },
+      {
+        "name": "thumb-reveal",
+        "value": "300ms opacity 0.8 to 1",
+        "purpose": "Archive thumbnails on hover or focus."
+      },
+      {
+        "name": "view-transition",
+        "value": "220ms",
+        "purpose": "Root cross-fade and the archive-thumbnail-to-plate transition (view-transition-name: plate)."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "durations 0.01ms, view transitions off",
+        "purpose": "prefers-reduced-motion: reduce removes all animation."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ],
+    "layout": {
+      "container": "90rem",
+      "headerHeight": "3.5rem",
+      "plateHeightDesktop": "clamp(26rem, calc(100svh - var(--header-h) - 10.5rem), 56rem)",
+      "plateMobile": "square, max 70svh",
+      "tickBand": {
+        "minor": "4px every 8px, line-strong",
+        "major": "9px every 64px, muted"
+      }
+    },
+    "contrastOnInk": {
+      "star": "17.4:1",
+      "copy": "13.6:1",
+      "muted": "7.5:1",
+      "faint": "5.2:1",
+      "line-strong": "3.5:1 (borders only)",
+      "line": "1.4:1 (structure only)",
+      "red": "6.4:1"
+    }
+  },
+  "components": [
+    {
+      "name": "Outline Control",
+      "kind": "button",
+      "refersTo": "control",
+      "description": "The only button style: notation label in a 1px line-strong frame, 48px tall.",
+      "html": "<button class=\"ds-control\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M5.5 15a3.51 3.51 0 0 0 2.36-.93l6.26 3.58a3.06 3.06 0 0 0-.12.85 3.53 3.53 0 1 0 1.14-2.57l-6.26-3.58a2.74 2.74 0 0 0 .12-.73l6.39-3.65A3.49 3.49 0 1 0 14 5.5a3.35 3.35 0 0 0 .12.85L8.43 9.6A3.5 3.5 0 1 0 5.5 15zm12 2a1.5 1.5 0 1 1-1.5 1.5 1.5 1.5 0 0 1 1.5-1.5zm0-13A1.5 1.5 0 1 1 16 5.5 1.5 1.5 0 0 1 17.5 4zm-12 6A1.5 1.5 0 1 1 4 11.5 1.5 1.5 0 0 1 5.5 10z\"/></svg>Compartir</button>",
+      "css": ".ds-control{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;white-space:nowrap;background:transparent;color:var(--star,#f2f0ea);border:1px solid var(--line-strong,#66666d);border-radius:0;font-family:Archivo,system-ui,sans-serif;font-size:.8125rem;line-height:1.25rem;font-weight:500;font-stretch:112%;letter-spacing:.14em;text-transform:uppercase;font-variant-numeric:tabular-nums;cursor:pointer;transition:border-color 200ms,color 200ms}.ds-control:hover{border-color:var(--star,#f2f0ea)}.ds-control:focus-visible{outline:2px solid var(--red,#ff5a47);outline-offset:3px}.ds-control:disabled{cursor:not-allowed;border-color:var(--line,#2a2a2e);color:var(--faint,#85837d)}"
+    },
+    {
+      "name": "Icon Control",
+      "kind": "button",
+      "refersTo": "control-icon",
+      "description": "48px square outline control for previous, next and random.",
+      "html": "<button class=\"ds-control-icon\" aria-label=\"Previous day\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M13.29 6.29 7.59 12l5.7 5.71 1.42-1.42L10.41 12l4.3-4.29z\"/></svg></button><button class=\"ds-control-icon\" disabled aria-label=\"Next day\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M10.71 17.71 16.41 12l-5.7-5.71-1.42 1.42L13.59 12l-4.3 4.29z\"/></svg></button>",
+      "css": ".ds-control-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;margin-right:8px;padding:0;background:transparent;color:var(--star,#f2f0ea);border:1px solid var(--line-strong,#66666d);border-radius:0;cursor:pointer;transition:border-color 200ms}.ds-control-icon:hover{border-color:var(--star,#f2f0ea)}.ds-control-icon:focus-visible{outline:2px solid var(--red,#ff5a47);outline-offset:3px}.ds-control-icon:disabled{cursor:not-allowed;border-color:var(--line,#2a2a2e);color:var(--faint,#85837d)}"
+    },
+    {
+      "name": "Notation Link",
+      "kind": "custom",
+      "refersTo": "notation-link",
+      "description": "Secondary actions in the day margin: muted notation with a line-strong underline that turns red on hover.",
+      "html": "<a class=\"ds-notation-link\" href=\"#\">Alta resolución<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"m13 3 3.29 3.29-7 7 1.42 1.42 7-7L21 11V3z\"/><path d=\"M19 19H5V5h7l-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5l-2-2v7z\"/></svg></a>",
+      "css": ".ds-notation-link{display:inline-flex;align-items:center;gap:8px;min-height:48px;color:var(--muted,#a19f98);text-decoration:underline;text-decoration-color:var(--line-strong,#66666d);text-decoration-thickness:1px;text-underline-offset:.22em;font-family:Archivo,system-ui,sans-serif;font-size:.8125rem;line-height:1.25rem;font-weight:500;font-stretch:112%;letter-spacing:.14em;text-transform:uppercase;transition:color 150ms,text-decoration-color 150ms}.ds-notation-link:hover{color:var(--star,#f2f0ea);text-decoration-color:var(--red,#ff5a47)}.ds-notation-link:focus-visible{outline:2px solid var(--red,#ff5a47);outline-offset:3px}"
+    },
+    {
+      "name": "Index Bar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Header nav and language switch: muted notation, current item starlight with a 2px red underline.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item is-current\" href=\"#\" aria-current=\"page\">Hoy</a><a class=\"ds-nav-item\" href=\"#\">Archivo</a><a class=\"ds-nav-item\" href=\"#\">Acerca de</a><span class=\"ds-nav-sep\"></span><button class=\"ds-nav-item is-current\" aria-pressed=\"true\">ES</button><button class=\"ds-nav-item\" aria-pressed=\"false\">EN</button><button class=\"ds-nav-item\" aria-pressed=\"false\">PT</button></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;border-bottom:1px solid var(--line,#2a2a2e);background:var(--ink,#0a0a0b)}.ds-nav-sep{flex:1}.ds-nav-item{position:relative;display:flex;align-items:center;min-height:48px;padding:0 16px;background:none;border:0;color:var(--muted,#a19f98);text-decoration:none;cursor:pointer;font-family:Archivo,system-ui,sans-serif;font-size:.8125rem;line-height:1.25rem;font-weight:500;font-stretch:112%;letter-spacing:.14em;text-transform:uppercase;transition:color 150ms}.ds-nav-item:hover{color:var(--star,#f2f0ea)}.ds-nav-item.is-current{color:var(--star,#f2f0ea)}.ds-nav-item.is-current::after{content:'';position:absolute;left:16px;right:16px;bottom:0;height:2px;background:var(--red,#ff5a47)}.ds-nav-item:focus-visible{outline:2px solid var(--red,#ff5a47);outline-offset:3px}"
+    },
+    {
+      "name": "Chart Plate",
+      "kind": "card",
+      "refersTo": "plate",
+      "description": "Signature frame: outer neat-line, graduated tick band, inner neat-line; the picture is contained and outlined on its own box.",
+      "html": "<div class=\"ds-plate\"><div class=\"ds-plate-field\"><div class=\"ds-plate-pic\"></div></div></div>",
+      "css": ".ds-plate{position:relative;width:420px;height:300px;padding:12px;border:1px solid var(--line-strong,#66666d);background:repeating-linear-gradient(90deg,var(--muted,#a19f98) 0 1px,transparent 1px 64px) top left/100% 9px no-repeat,repeating-linear-gradient(90deg,var(--line-strong,#66666d) 0 1px,transparent 1px 8px) top left/100% 4px no-repeat,repeating-linear-gradient(90deg,var(--muted,#a19f98) 0 1px,transparent 1px 64px) bottom left/100% 9px no-repeat,repeating-linear-gradient(90deg,var(--line-strong,#66666d) 0 1px,transparent 1px 8px) bottom left/100% 4px no-repeat,repeating-linear-gradient(180deg,var(--muted,#a19f98) 0 1px,transparent 1px 64px) top left/9px 100% no-repeat,repeating-linear-gradient(180deg,var(--line-strong,#66666d) 0 1px,transparent 1px 8px) top left/4px 100% no-repeat,repeating-linear-gradient(180deg,var(--muted,#a19f98) 0 1px,transparent 1px 64px) top right/9px 100% no-repeat,repeating-linear-gradient(180deg,var(--line-strong,#66666d) 0 1px,transparent 1px 8px) top right/4px 100% no-repeat}.ds-plate-field{position:relative;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid var(--line,#2a2a2e);background:var(--ink,#0a0a0b)}.ds-plate-pic{height:100%;aspect-ratio:1;outline:1px solid var(--line,#2a2a2e);background:radial-gradient(circle at 50% 50%,#e9e3d6 0 3%,#6d7fa6 12%,#2a2230 34%,#0b0b10 60%);animation:ds-focus-pull 700ms cubic-bezier(.16,1,.3,1) both}@keyframes ds-focus-pull{from{opacity:0;filter:blur(10px)}to{opacity:1;filter:blur(0)}}@media (prefers-reduced-motion:reduce){.ds-plate-pic{animation:none}}"
+    },
+    {
+      "name": "Empty Plate",
+      "kind": "card",
+      "refersTo": "plate-empty",
+      "description": "Errors and missing days: dashed frame, serif title, muted body, outline controls. Never red.",
+      "html": "<div class=\"ds-plate-empty\" role=\"alert\"><h2>La NASA pidió una pausa</h2><p>Se agotó el cupo de consultas por hora. Prueba de nuevo en unos minutos.</p><button class=\"ds-empty-control\">Reintentar</button></div>",
+      "css": ".ds-plate-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;width:420px;min-height:300px;padding:48px 24px;text-align:center;border:1px dashed var(--line-strong,#66666d);background:var(--ink,#0a0a0b)}.ds-plate-empty h2{margin:0;max-width:28rem;font-family:'Source Serif 4',Georgia,serif;font-weight:400;font-size:1.875rem;line-height:1.25;color:var(--star,#f2f0ea)}.ds-plate-empty p{margin:12px 0 0;max-width:28rem;font-family:Archivo,system-ui,sans-serif;font-size:1rem;line-height:1.5;color:var(--muted,#a19f98)}.ds-empty-control{margin-top:32px;min-height:48px;padding:0 16px;background:transparent;color:var(--star,#f2f0ea);border:1px solid var(--line-strong,#66666d);border-radius:0;font-family:Archivo,system-ui,sans-serif;font-size:.8125rem;font-weight:500;font-stretch:112%;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:border-color 200ms}.ds-empty-control:hover{border-color:var(--star,#f2f0ea)}.ds-empty-control:focus-visible{outline:2px solid var(--red,#ff5a47);outline-offset:3px}"
+    },
+    {
+      "name": "Date Ruler",
+      "kind": "input",
+      "refersTo": "ruler-thumb",
+      "description": "Signature control: native range graduated by day, numbered majors every fifth day, red bar thumb.",
+      "html": "<div class=\"ds-ruler-wrap\"><input class=\"ds-ruler\" type=\"range\" min=\"1\" max=\"30\" value=\"20\" aria-label=\"Día del mes\" style=\"--days:30\"><div class=\"ds-ruler-nums\"><span style=\"left:0%\">1</span><span style=\"left:13.8%\">5</span><span style=\"left:31%\">10</span><span style=\"left:48.3%\">15</span><span style=\"left:65.5%\">20</span><span style=\"left:82.8%\">25</span><span style=\"left:100%;transform:translateX(-100%)\">30</span></div></div>",
+      "css": ".ds-ruler-wrap{width:420px;padding:8px 0}.ds-ruler{-webkit-appearance:none;appearance:none;display:block;width:100%;height:48px;margin:0;cursor:pointer;background:linear-gradient(var(--line-strong,#66666d),var(--line-strong,#66666d)) center/100% 1px no-repeat,repeating-linear-gradient(90deg,var(--muted,#a19f98) 0 1px,transparent 1px calc((100% - 1px)/(var(--days) - 1))) center/100% 14px no-repeat}.ds-ruler::-webkit-slider-thumb{-webkit-appearance:none;width:3px;height:36px;border:0;border-radius:0;background:var(--red,#ff5a47);box-shadow:0 0 0 5px var(--ink,#0a0a0b)}.ds-ruler::-moz-range-thumb{width:3px;height:36px;border:0;border-radius:0;background:var(--red,#ff5a47);box-shadow:0 0 0 5px var(--ink,#0a0a0b)}.ds-ruler::-moz-range-track{background:transparent}.ds-ruler:focus-visible{outline:2px solid var(--red,#ff5a47);outline-offset:6px}.ds-ruler-nums{position:relative;height:20px}.ds-ruler-nums span{position:absolute;transform:translateX(-50%);color:var(--faint,#85837d);font-family:Archivo,system-ui,sans-serif;font-size:.8125rem;font-weight:500;letter-spacing:.14em;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Share Menu",
+      "kind": "custom",
+      "refersTo": "share-popover",
+      "description": "Fallback share popover: ink-wash panel, line-strong border, the system's only shadow, 48px notation rows.",
+      "html": "<div class=\"ds-share\"><button class=\"ds-share-row\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M8.47 13.53a4 4 0 0 1 0-5.66l3-3a4 4 0 0 1 5.66 5.66l-1.42 1.42-1.41-1.42 1.41-1.41a2 2 0 1 0-2.83-2.83l-3 3a2 2 0 0 0 0 2.83zm7.07-3.06a4 4 0 0 1 0 5.66l-3 3a4 4 0 1 1-5.66-5.66l1.42-1.42 1.41 1.42-1.41 1.41a2 2 0 1 0 2.83 2.83l3-3a2 2 0 0 0 0-2.83z\"/></svg>Copiar enlace</button><a class=\"ds-share-row\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 2v.51l-8 6.22-8-6.22V6zM4 18V9.04l7.39 5.75a1 1 0 0 0 1.22 0L20 9.04V18z\"/></svg>Correo</a></div>",
+      "css": ".ds-share{width:256px;padding:4px 0;background:var(--ink-2,#131315);border:1px solid var(--line-strong,#66666d);box-shadow:0 12px 32px rgba(0,0,0,.6)}.ds-share-row{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 16px;background:none;border:0;color:var(--star,#f2f0ea);text-decoration:none;cursor:pointer;font-family:Archivo,system-ui,sans-serif;font-size:.8125rem;font-weight:500;font-stretch:112%;letter-spacing:.14em;text-transform:uppercase}.ds-share-row svg{color:var(--muted,#a19f98)}.ds-share-row:hover{background:var(--ink,#0a0a0b)}.ds-share-row:focus-visible{outline:2px solid var(--red,#ff5a47);outline-offset:-2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Atlas de campo",
+    "overview": "A field-edition star atlas: printed black ground, starlight-white plates, graticule hairlines and a single red-light accent of the kind observers use to read charts at night without losing dark adaptation. Each day is a chart plate. The picture is the plate, whole and uncropped, inside a graduated neat-line; everything else (date, day count, title, credit, actions) is margin notation set beside it.\n\nDensity is low and the hierarchy is carried by two voices rather than by boxes: a book serif for NASA's words and the page titles, spaced sans caps with tabular figures for the atlas's own notation. Structure is drawn with 1px lines and tick marks, never with fills, radii or shadows. Motion is optical: a picture arrives as a blurred low-resolution plate and pulls into focus. The world rejects the sci-fi HUD dashboard and the stock dark photo gallery.",
+    "keyCharacteristics": [
+      "Ink-black ground (#0a0a0b), one warm off-white for type that matters, four stepped greys for everything else.",
+      "One accent, red, drawn as a 2px line, a 3px thumb or a glyph, never as a fill.",
+      "Square corners everywhere; frames are 1px neat-lines with graduated tick bands.",
+      "Serif titles and captions against Archivo spaced caps with tabular figures.",
+      "Focus pull (blur to sharp) as the signature motion; reduced motion removes it."
+    ],
+    "rules": [
+      {
+        "name": "The Red Light Rule",
+        "body": "Red marks position and focus only. It never fills an error, an empty state, a surface, or a control at rest; the largest red shapes in the system are a 3px ruler thumb and a 2px underline (the focus-only skip link is the one filled exception).",
+        "section": "colors"
+      },
+      {
+        "name": "The Drawn Error Rule",
+        "body": "Errors and missing days are dashed empty plates (1px dashed line-strong, same footprint as a plate) with a serif title, muted body and outline controls. No red text, red borders or red icons in any error.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hairline Is Not Type Rule",
+        "body": "Graticule and Graticule Strong draw borders and ticks, never text. Faint (5.2:1) is the lowest-contrast colour allowed for type.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "Serif speaks words (NASA's titles and captions, page titles, empty-plate titles). Archivo notation speaks the atlas (dates, counts, codes, labels, controls). Headings are never set in notation caps and notation is never set in the serif.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Every number in notation uses tabular figures so dates, counts and ruler numerals align like a printed scale.",
+        "section": "typography"
+      },
+      {
+        "name": "The Plate And Margin Rule",
+        "body": "The picture owns the left two-thirds and everything written about it lives in the margin beside it; nothing overlays the picture except the transient loading and scrub states.",
+        "section": "layout"
+      },
+      {
+        "name": "The Neat-Line Rule",
+        "body": "Separate things with a 1px line, never with a fill change, radius or shadow. A new container is a frame, not a card.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Uncropped Plate Rule",
+        "body": "The plate has a fixed size that never depends on the media. The picture is contained, never cropped, and carries a 1px graticule outline on its own rendered box so the line traces the picture's real edge rather than the letterbox. Only archive index thumbnails crop, as square cells.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Numbered Tick Rule",
+        "body": "A major tick is drawn only where a numeral sits: every fifth day, plus the first and last day when no fifth day is within two days of them.",
+        "section": "components"
+      },
+      {
+        "name": "The One Box Rule",
+        "body": "In the day margin the only boxed control is Share. Secondary actions (high resolution, official page, see the month) are notation links: muted text, line-strong underline turning red on hover, external ones with a 16px link-out icon.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** put the picture in a plate and everything about it in the margin as notation.",
+      "**Do** draw every frame with 1px lines: line for dividers and image outlines, line-strong for control borders and the outer neat-line.",
+      "**Do** keep red to position and focus: current day, current nav item or language, the ruler thumb, focus rings.",
+      "**Do** draw errors and missing days as dashed empty plates with outline controls.",
+      "**Do** set every date, count and code in notation with tabular figures, and every NASA title and caption in the serif with `lang=\"en\"`.",
+      "**Do** keep every interactive target at least 48px tall and give it the 2px red focus ring at 3px offset.",
+      "**Do** let pictures arrive with the focus pull, and drop it under `prefers-reduced-motion`."
+    ],
+    "donts": [
+      "**Don't** crop the day picture or let its size change the plate; contain it and outline its own box.",
+      "**Don't** fill anything with red, and never use red for errors, warnings or empty states.",
+      "**Don't** add a second boxed control to the day margin; secondary actions are notation links.",
+      "**Don't** draw a major ruler tick without a numeral under it.",
+      "**Don't** round corners, fill containers into cards, or add backdrop blur or glass to surfaces.",
+      "**Don't** set text in line or line-strong, or any text below faint.",
+      "**Don't** use shadows for depth anywhere except the share popover."
+    ]
+  }
+}
