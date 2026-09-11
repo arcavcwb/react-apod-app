@@ -142,7 +142,7 @@ const Orrery: React.FC<OrreryProps> = ({ activeId, onHover }) => {
       if (!w || !h) return;
       camera.aspect = w / h;
       // Pull the camera back so the outer orbit stays in frame, more on narrow screens.
-      camera.position.setLength(baseCam.length() * Math.max(1.2, 1.75 / camera.aspect));
+      camera.position.setLength(baseCam.length() * Math.max(1.45, 1.8 / camera.aspect));
       camera.updateProjectionMatrix();
       renderer.setSize(w, h, false);
       invalidate();
