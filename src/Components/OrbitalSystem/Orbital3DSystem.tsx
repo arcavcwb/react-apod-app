@@ -3,16 +3,23 @@ import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 import { ORBITAL_STATIONS, OrbitalStationConfig } from './orbital3d.config';
 import { navigateWithViewTransition } from '../../utils/navigation';
-import nasa from '../../Assets/nasa.png';
-import { BiRocket, BiImages, BiInfoCircle, BiCompass } from 'react-icons/bi';
+import { BiRocket, BiImages, BiInfoCircle } from 'react-icons/bi';
 
-export const Orbital3DSystem: React.FC = () => {
+interface Orbital3DSystemProps {
+  onHoverStation?: (station: OrbitalStationConfig | null) => void;
+  activeStationId?: string | null;
+}
+
+export const Orbital3DSystem: React.FC<Orbital3DSystemProps> = ({
+  onHoverStation,
+  activeStationId,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
 
   const [hoveredStation, setHoveredStation] = useState<OrbitalStationConfig | null>(null);
-  const [focusedStationId, setFocusedStationId] = useState<string | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
   // References for render loop & cleanup
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -22,6 +29,7 @@ export const Orbital3DSystem: React.FC = () => {
   const raycasterRef = useRef(new THREE.Raycaster());
   const mousePosRef = useRef(new THREE.Vector2(-9999, -9999));
   const normalizedMouseRef = useRef({ x: 0, y: 0 });
+
   const stationObjectsRef = useRef<
     {
       group: THREE.Group;
@@ -30,14 +38,23 @@ export const Orbital3DSystem: React.FC = () => {
       angle: number;
       orbitSpeed: number;
       verticalPhase: number;
+      moonGroup?: THREE.Group;
     }[]
   >([]);
-  const isHoveredRef = useRef<OrbitalStationConfig | null>(null);
 
-  // Synchronize state to ref for animation loop
+  const isHoveredRef = useRef<OrbitalStationConfig | null>(null);
+  const activeStationIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     isHoveredRef.current = hoveredStation;
-  }, [hoveredStation]);
+    if (onHoverStation) {
+      onHoverStation(hoveredStation);
+    }
+  }, [hoveredStation, onHoverStation]);
+
+  useEffect(() => {
+    activeStationIdRef.current = activeStationId || null;
+  }, [activeStationId]);
 
   const handleNavigateStation = useCallback(
     (station: OrbitalStationConfig) => {
@@ -51,21 +68,21 @@ export const Orbital3DSystem: React.FC = () => {
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
-    const width = container.clientWidth || 500;
-    const height = container.clientHeight || 500;
+    let width = container.clientWidth || 600;
+    let height = container.clientHeight || 600;
 
     // 1. Scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. Camera with cinematic orbital perspective
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
-    const baseCamPos = new THREE.Vector3(0, 18, 25);
+    // 2. Camera with cinematic orbital perspective (inclined angle for deep 3D view)
+    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
+    const baseCamPos = new THREE.Vector3(0, 16, 26);
     camera.position.copy(baseCamPos);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    // 3. Renderer with error guard
+    // 3. Renderer with error guard for non-WebGL environments (JSDOM/tests)
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -75,85 +92,113 @@ export const Orbital3DSystem: React.FC = () => {
         powerPreference: 'high-performance',
       });
     } catch {
-      // Fallback defensivo en entornos sin WebGL (JSDOM/tests)
       return;
     }
+
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     rendererRef.current = renderer;
 
-    // 4. Cosmic Particle Field (Polvo Estelar y Constelaciones 3D)
-    const starCount = 750;
+    // 4. Cosmic Starfield (1,000 partículas en profundidad 3D)
+    const starCount = 1000;
     const starGeometry = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
-    const starScales = new Float32Array(starCount);
 
     for (let i = 0; i < starCount * 3; i += 3) {
-      const radius = 18 + Math.random() * 60;
+      const radius = 15 + Math.random() * 80;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(Math.random() * 2 - 1);
 
       starPositions[i] = radius * Math.sin(phi) * Math.cos(theta);
-      starPositions[i + 1] = radius * Math.sin(phi) * Math.sin(theta) * 0.45; // Plano aplanado galáctico
+      starPositions[i + 1] = radius * Math.sin(phi) * Math.sin(theta) * 0.4;
       starPositions[i + 2] = radius * Math.cos(phi);
-      starScales[i / 3] = 0.5 + Math.random() * 1.5;
     }
 
     starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     const starMaterial = new THREE.PointsMaterial({
-      color: 0x67e8f9,
-      size: 0.18,
+      color: 0x7dd3fc,
+      size: 0.16,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
     });
     const starField = new THREE.Points(starGeometry, starMaterial);
     scene.add(starField);
 
     // 5. Lighting
-    const ambientLight = new THREE.AmbientLight(0x0a1122, 1.4);
+    const ambientLight = new THREE.AmbientLight(0x0f172a, 1.2);
     scene.add(ambientLight);
 
-    // Luz estelar solar central (resplandor vivo)
-    const coreLight = new THREE.PointLight(0x22d3ee, 4, 60, 1.2);
-    coreLight.position.set(0, 0, 0);
-    scene.add(coreLight);
+    // Sol central: luz radiante omnidireccional
+    const sunLight = new THREE.PointLight(0x38bdf8, 4.5, 65, 1.2);
+    sunLight.position.set(0, 0, 0);
+    scene.add(sunLight);
 
-    // Luz secundaria cálida de borde
-    const rimLight = new THREE.DirectionalLight(0xa5b4fc, 1.6);
-    rimLight.position.set(-15, 25, -10);
-    scene.add(rimLight);
+    // Luz secundaria cálida de relleno para contraste estético
+    const fillLight = new THREE.DirectionalLight(0x818cf8, 1.0);
+    fillLight.position.set(-20, 20, -10);
+    scene.add(fillLight);
 
-    // 6. Central Sun / Core
-    const coreGeometry = new THREE.SphereGeometry(2.3, 32, 32);
-    const coreMaterial = new THREE.MeshStandardMaterial({
-      color: 0x020617,
-      emissive: 0x06b6d4,
-      emissiveIntensity: 0.8,
-      roughness: 0.15,
-      metalness: 0.9,
+    // 6. Radiant Sun / Core 3D
+    const sunGroup = new THREE.Group();
+    scene.add(sunGroup);
+
+    // Núcleo estelar
+    const coreGeom = new THREE.SphereGeometry(2.0, 32, 32);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      emissive: 0x38bdf8,
+      emissiveIntensity: 1.8,
+      roughness: 0.1,
+      metalness: 0.8,
     });
-    const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
-    scene.add(coreMesh);
+    const sunCore = new THREE.Mesh(coreGeom, coreMat);
+    sunGroup.add(sunCore);
 
-    // Corona solar translúcida concéntrica
-    const coronaGeom = new THREE.RingGeometry(2.7, 3.1, 64);
-    const coronaMat = new THREE.MeshBasicMaterial({
+    // Corona solar interior
+    const coronaInnerGeom = new THREE.RingGeometry(2.2, 2.8, 64);
+    const coronaInnerMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.6,
       blending: THREE.AdditiveBlending,
     });
-    const coronaRing = new THREE.Mesh(coronaGeom, coronaMat);
-    coronaRing.rotation.x = Math.PI / 2;
-    scene.add(coronaRing);
+    const coronaInner = new THREE.Mesh(coronaInnerGeom, coronaInnerMat);
+    coronaInner.rotation.x = Math.PI / 2;
+    sunGroup.add(coronaInner);
 
-    // 7. Concentric 3D Orbit Lines & Celestial Stations
+    // Corona solar media
+    const coronaMidGeom = new THREE.RingGeometry(2.8, 3.8, 64);
+    const coronaMidMat = new THREE.MeshBasicMaterial({
+      color: 0x06b6d4,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+    });
+    const coronaMid = new THREE.Mesh(coronaMidGeom, coronaMidMat);
+    coronaMid.rotation.x = Math.PI / 2;
+    sunGroup.add(coronaMid);
+
+    // Corona solar exterior difusa
+    const coronaOuterGeom = new THREE.RingGeometry(3.8, 5.0, 64);
+    const coronaOuterMat = new THREE.MeshBasicMaterial({
+      color: 0x0284c7,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.18,
+      blending: THREE.AdditiveBlending,
+    });
+    const coronaOuter = new THREE.Mesh(coronaOuterGeom, coronaOuterMat);
+    coronaOuter.rotation.x = Math.PI / 2;
+    sunGroup.add(coronaOuter);
+
+    // 7. Planetary Orbits and Bodies
     const stationsList: typeof stationObjectsRef.current = [];
 
     ORBITAL_STATIONS.forEach((station, idx) => {
-      // Trazos orbitales precisos en plano XZ
+      // Líneas orbitales suaves en plano XZ
       const orbitCurve = new THREE.EllipseCurve(
         0,
         0,
@@ -172,7 +217,7 @@ export const Orbital3DSystem: React.FC = () => {
       const orbitMaterial = new THREE.LineBasicMaterial({
         color: new THREE.Color(station.color),
         transparent: true,
-        opacity: idx === 1 ? 0.3 : 0.45,
+        opacity: idx === 1 ? 0.28 : 0.4,
       });
 
       const orbitLine = new THREE.LineLoop(orbitGeometry, orbitMaterial);
@@ -183,93 +228,136 @@ export const Orbital3DSystem: React.FC = () => {
       scene.add(stationGroup);
 
       let bodyMesh: THREE.Mesh;
+      let moonGroup: THREE.Group | undefined;
 
       if (idx === 1) {
-        // Estación Beta: Sonda de exploración espacial con alas solares
-        const probeCoreGeom = new THREE.BoxGeometry(station.size * 0.9, station.size * 0.9, station.size * 1.3);
+        // Estación Archivo: Sonda de exploración espacial con paneles solares
+        const probeBodyGeom = new THREE.BoxGeometry(
+          station.size * 0.9,
+          station.size * 0.9,
+          station.size * 1.3
+        );
         const probeMat = new THREE.MeshStandardMaterial({
-          color: 0x818cf8,
-          emissive: 0x3730a3,
-          emissiveIntensity: 0.7,
-          metalness: 0.9,
-          roughness: 0.2,
+          color: 0xa5b4fc,
+          emissive: 0x4338ca,
+          emissiveIntensity: 0.8,
+          metalness: 0.95,
+          roughness: 0.15,
         });
-        bodyMesh = new THREE.Mesh(probeCoreGeom, probeMat);
+        bodyMesh = new THREE.Mesh(probeBodyGeom, probeMat);
 
         // Paneles solares simétricos
-        const wingGeom = new THREE.BoxGeometry(station.size * 2.2, 0.05, station.size * 0.6);
+        const wingGeom = new THREE.BoxGeometry(station.size * 2.4, 0.04, station.size * 0.7);
         const wingMat = new THREE.MeshStandardMaterial({
           color: 0x1e1b4b,
-          emissive: 0x4338ca,
-          emissiveIntensity: 0.5,
-          metalness: 0.95,
+          emissive: 0x312e81,
+          emissiveIntensity: 0.6,
+          metalness: 0.9,
         });
         const wings = new THREE.Mesh(wingGeom, wingMat);
         bodyMesh.add(wings);
 
-        // Baliza emisora en la punta
+        // Baliza pulsante
         const beaconGeom = new THREE.SphereGeometry(0.12, 12, 12);
-        const beaconMat = new THREE.MeshBasicMaterial({ color: 0xa5b4fc });
+        const beaconMat = new THREE.MeshBasicMaterial({ color: 0xc7d2fe });
         const beacon = new THREE.Mesh(beaconGeom, beaconMat);
-        beacon.position.set(0, station.size * 0.6, 0);
+        beacon.position.set(0, station.size * 0.65, 0);
         bodyMesh.add(beacon);
       } else {
-        // Estación Alfa o Gamma: Esferas planetarias de alta fidelidad
+        // Estación Foto de Hoy o Acerca de: Planetas con sombreado rico
         const planetGeom = new THREE.SphereGeometry(station.size, 32, 32);
         const planetMat = new THREE.MeshStandardMaterial({
           color: new THREE.Color(station.color),
           emissive: new THREE.Color(station.emissive),
-          emissiveIntensity: 0.75,
-          roughness: 0.25,
-          metalness: 0.7,
+          emissiveIntensity: 0.6,
+          roughness: 0.3,
+          metalness: 0.6,
         });
         bodyMesh = new THREE.Mesh(planetGeom, planetMat);
 
-        // Atmósfera gaseosa sutil exterior (Fresnel glow)
-        const atmosphereGeom = new THREE.SphereGeometry(station.size * 1.15, 24, 24);
-        const atmosphereMat = new THREE.MeshBasicMaterial({
+        // Atmósfera con brillo exterior suave (Fresnel glow)
+        const atmoGeom = new THREE.SphereGeometry(station.size * 1.18, 24, 24);
+        const atmoMat = new THREE.MeshBasicMaterial({
           color: new THREE.Color(station.color),
           transparent: true,
-          opacity: 0.25,
+          opacity: 0.22,
           blending: THREE.AdditiveBlending,
         });
-        const atmosphere = new THREE.Mesh(atmosphereGeom, atmosphereMat);
+        const atmosphere = new THREE.Mesh(atmoGeom, atmoMat);
         bodyMesh.add(atmosphere);
+
+        // Si tiene luna (Estación Foto de Hoy)
+        if (station.hasMoon) {
+          moonGroup = new THREE.Group();
+          stationGroup.add(moonGroup);
+
+          const moonGeom = new THREE.SphereGeometry(0.18, 16, 16);
+          const moonMat = new THREE.MeshStandardMaterial({
+            color: 0x94a3b8,
+            emissive: 0x475569,
+            emissiveIntensity: 0.4,
+            roughness: 0.5,
+          });
+          const moonMesh = new THREE.Mesh(moonGeom, moonMat);
+          moonMesh.position.set(1.3, 0, 0);
+          moonGroup.add(moonMesh);
+
+          // Órbita de la luna
+          const moonOrbitGeom = new THREE.BufferGeometry().setFromPoints(
+            new THREE.EllipseCurve(0, 0, 1.3, 1.3, 0, 2 * Math.PI, false, 0)
+              .getPoints(40)
+              .map((p) => new THREE.Vector3(p.x, 0, p.y))
+          );
+          const moonOrbitMat = new THREE.LineBasicMaterial({
+            color: 0x38bdf8,
+            transparent: true,
+            opacity: 0.2,
+          });
+          const moonOrbitLine = new THREE.LineLoop(moonOrbitGeom, moonOrbitMat);
+          moonGroup.add(moonOrbitLine);
+        }
+
+        // Si tiene anillos (Estación Acerca de)
+        if (station.hasRing) {
+          const ringGroup = new THREE.Group();
+          ringGroup.rotation.x = Math.PI / 3.5;
+          ringGroup.rotation.z = Math.PI / 10;
+
+          // Anillo interior
+          const r1Geom = new THREE.RingGeometry(station.size * 1.3, station.size * 1.8, 64);
+          const r1Mat = new THREE.MeshBasicMaterial({
+            color: 0x34d399,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.45,
+            blending: THREE.AdditiveBlending,
+          });
+          const r1 = new THREE.Mesh(r1Geom, r1Mat);
+          ringGroup.add(r1);
+
+          // Anillo exterior
+          const r2Geom = new THREE.RingGeometry(station.size * 1.9, station.size * 2.5, 64);
+          const r2Mat = new THREE.MeshBasicMaterial({
+            color: 0x6ee7b7,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.25,
+            blending: THREE.AdditiveBlending,
+          });
+          const r2 = new THREE.Mesh(r2Geom, r2Mat);
+          ringGroup.add(r2);
+
+          bodyMesh.add(ringGroup);
+        }
       }
 
       bodyMesh.userData = { stationId: station.id, config: station };
       stationGroup.add(bodyMesh);
 
-      // Anillo planetario para la Estación Gamma
-      if (station.hasRing) {
-        const ringGeom = new THREE.RingGeometry(station.size * 1.4, station.size * 2.2, 48);
-        const ringMat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(station.color),
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.6,
-          roughness: 0.4,
-        });
-        const ringMesh = new THREE.Mesh(ringGeom, ringMat);
-        ringMesh.rotation.x = Math.PI / 2.3;
-        ringMesh.rotation.y = 0.2;
-        stationGroup.add(ringMesh);
-      }
-
-      // Satélite natural / Luna para la Estación Alfa
-      if (station.hasMoon) {
-        const moonGeom = new THREE.SphereGeometry(0.18, 16, 16);
-        const moonMat = new THREE.MeshStandardMaterial({
-          color: 0xcffafe,
-          roughness: 0.5,
-        });
-        const moonMesh = new THREE.Mesh(moonGeom, moonMat);
-        moonMesh.position.set(station.size * 1.8, 0.3, 0);
-        stationGroup.add(moonMesh);
-      }
-
-      // Distribución angular inicial balanceada (0°, 120°, 240°)
-      const initialAngle = (idx * (2 * Math.PI)) / 3;
+      // Posición orbital inicial
+      const initialAngle = (idx * (2 * Math.PI)) / ORBITAL_STATIONS.length;
+      stationGroup.position.x = Math.cos(initialAngle) * station.radius;
+      stationGroup.position.z = Math.sin(initialAngle) * station.radius;
 
       stationsList.push({
         group: stationGroup,
@@ -277,115 +365,133 @@ export const Orbital3DSystem: React.FC = () => {
         config: station,
         angle: initialAngle,
         orbitSpeed: station.speed,
-        verticalPhase: idx * 1.5,
+        verticalPhase: idx * 2.1,
+        moonGroup,
       });
     });
 
     stationObjectsRef.current = stationsList;
 
-    // 8. Motion Reduced check
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // 9. Animation Render Loop con Micro-Parallax
-    let clock = new THREE.Clock();
-
-    const animate = () => {
-      animFrameIdRef.current = requestAnimationFrame(animate);
-
-      const elapsedTime = clock.getElapsedTime();
-      const currentHovered = isHoveredRef.current;
-
-      // Parallax suave de cámara según posición del cursor
-      if (!prefersReducedMotion) {
-        const targetCamX = normalizedMouseRef.current.x * 5;
-        const targetCamY = 18 - normalizedMouseRef.current.y * 3.5;
-        camera.position.x += (targetCamX - camera.position.x) * 0.04;
-        camera.position.y += (targetCamY - camera.position.y) * 0.04;
-        camera.lookAt(0, 0, 0);
-
-        // Giro lento y pacífico del campo estelar
-        starField.rotation.y += 0.0003;
-        coronaRing.rotation.z += 0.005;
-
-        // Pulso suave de la luz del sol/núcleo
-        coreLight.intensity = 3.5 + Math.sin(elapsedTime * 2) * 0.5;
-      }
-
-      // Cinemática orbital de cada estación
-      stationsList.forEach((item) => {
-        const isThisHovered = currentHovered?.id === item.config.id;
-        const speedMultiplier = isThisHovered ? 0.12 : 1.0;
-
-        if (!prefersReducedMotion) {
-          item.angle += item.orbitSpeed * speedMultiplier;
-        }
-
-        // Posición elíptica en el plano espacial con suave oscilación orbital vertical
-        const posX = Math.cos(item.angle) * item.config.radius;
-        const posZ = Math.sin(item.angle) * item.config.radius;
-        const posY = Math.sin(item.angle * 2 + item.verticalPhase) * 0.35;
-
-        item.group.position.set(posX, posY, posZ);
-
-        // Rotación axial propia del planeta/sonda
-        if (!prefersReducedMotion) {
-          item.bodyMesh.rotation.y += 0.015;
-          item.bodyMesh.rotation.z += 0.005;
-        }
-
-        // Escalado elástico suave al seleccionar o hacer hover
-        const targetScale = isThisHovered ? 1.45 : 1.0;
-        item.group.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.14);
-      });
-
-      // Raycasting
-      raycasterRef.current.setFromCamera(mousePosRef.current, camera);
-      const meshesToTest = stationsList.map((s) => s.bodyMesh);
-      const intersects = raycasterRef.current.intersectObjects(meshesToTest, true);
-
-      if (intersects.length > 0) {
-        let hitMesh = intersects[0].object;
-        while (hitMesh && !hitMesh.userData.config && hitMesh.parent) {
-          hitMesh = hitMesh.parent as THREE.Mesh;
-        }
-        if (hitMesh?.userData.config) {
-          const hitConfig = hitMesh.userData.config as OrbitalStationConfig;
-          if (isHoveredRef.current?.id !== hitConfig.id) {
-            setHoveredStation(hitConfig);
-          }
-          canvas.style.cursor = 'pointer';
-        }
-      } else {
-        if (isHoveredRef.current && !focusedStationId) {
-          setHoveredStation(null);
-          canvas.style.cursor = 'default';
-        }
-      }
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    // 10. Resize Observer
+    // 8. Dynamic Resize Observer for Container
     const handleResize = () => {
       if (!container || !renderer || !camera) return;
-      const newWidth = container.clientWidth;
-      const newHeight = container.clientHeight;
+      const newWidth = container.clientWidth || 500;
+      const newHeight = container.clientHeight || 500;
       camera.aspect = newWidth / newHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(newWidth, newHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     };
 
     const resizeObserver = new ResizeObserver(() => handleResize());
     resizeObserver.observe(container);
 
-    // 11. Mouse Movement Listeners
+    // 9. Animation Loop
+    const clock = new THREE.Clock();
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const animate = () => {
+      animFrameIdRef.current = requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsedTime = clock.getElapsedTime();
+
+      // Rotación sutil del campo estelar
+      starField.rotation.y = elapsedTime * 0.015;
+
+      // Pulso orgánico de la corona solar
+      const sunPulse = 1 + Math.sin(elapsedTime * 2.0) * 0.06;
+      coronaInner.scale.set(sunPulse, sunPulse, 1);
+      coronaMid.scale.set(sunPulse * 1.02, sunPulse * 1.02, 1);
+      sunGroup.rotation.y += 0.005;
+
+      // Parallax reactivo de la cámara con amortiguación suave (lerp)
+      const targetCamX = normalizedMouseRef.current.x * 2.8;
+      const targetCamY = baseCamPos.y + normalizedMouseRef.current.y * 1.8;
+      camera.position.x += (targetCamX - camera.position.x) * 0.05;
+      camera.position.y += (targetCamY - camera.position.y) * 0.05;
+      camera.lookAt(0, 0, 0);
+
+      // Actualizar cuerpos orbitales
+      stationsList.forEach((stationObj) => {
+        const isHovered =
+          isHoveredRef.current?.id === stationObj.config.id ||
+          activeStationIdRef.current === stationObj.config.id;
+
+        // Desacelerar suavemente en hover para facilitar el clic
+        const currentSpeed = isHovered ? stationObj.orbitSpeed * 0.15 : stationObj.orbitSpeed;
+
+        if (!prefersReducedMotion) {
+          stationObj.angle += currentSpeed * delta * 60;
+        }
+
+        // Posición XZ en órbita
+        stationObj.group.position.x = Math.cos(stationObj.angle) * stationObj.config.radius;
+        stationObj.group.position.z = Math.sin(stationObj.angle) * stationObj.config.radius;
+
+        // Bobbing vertical armónico suave
+        stationObj.group.position.y =
+          Math.sin(elapsedTime * 1.5 + stationObj.verticalPhase) * 0.45;
+
+        // Rotación axial propia del cuerpo celeste
+        stationObj.bodyMesh.rotation.y += 0.015;
+
+        // Rotación de la luna si existe
+        if (stationObj.moonGroup) {
+          stationObj.moonGroup.position.copy(stationObj.group.position);
+          stationObj.moonGroup.rotation.y += 0.04;
+        }
+
+        // Escala con transición en hover
+        const targetScale = isHovered ? 1.35 : 1.0;
+        stationObj.bodyMesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.12);
+      });
+
+      // Raycasting para detección de hover del puntero
+      raycasterRef.current.setFromCamera(mousePosRef.current, camera);
+      const meshesToIntersect = stationsList.map((s) => s.bodyMesh);
+      const intersects = raycasterRef.current.intersectObjects(meshesToIntersect, true);
+
+      if (intersects.length > 0) {
+        // Encontrar la malla raíz que contiene userData
+        let hitObject: THREE.Object3D | null = intersects[0].object;
+        while (hitObject && !hitObject.userData?.config) {
+          hitObject = hitObject.parent;
+        }
+
+        if (hitObject?.userData?.config) {
+          const config: OrbitalStationConfig = hitObject.userData.config;
+          setHoveredStation((prev) => (prev?.id === config.id ? prev : config));
+          canvas.style.cursor = 'pointer';
+
+          // Proyectar posición 3D a coordenadas de pantalla 2D para tooltip flotante
+          const screenPos = hitObject.position.clone();
+          hitObject.getWorldPosition(screenPos);
+          screenPos.project(camera);
+
+          const hw = container.clientWidth / 2;
+          const hh = container.clientHeight / 2;
+          const x = screenPos.x * hw + hw;
+          const y = -(screenPos.y * hh) + hh;
+          setTooltipPos({ x, y });
+        }
+      } else {
+        if (!activeStationIdRef.current) {
+          setHoveredStation(null);
+          setTooltipPos(null);
+        }
+        canvas.style.cursor = 'default';
+      }
+
+      renderer.render(scene, camera);
+    };
+
+    animFrameIdRef.current = requestAnimationFrame(animate);
+
+    // 10. Event Listeners
     const handlePointerMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
+      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
       mousePosRef.current.set(x, y);
       normalizedMouseRef.current = { x, y };
     };
@@ -393,10 +499,10 @@ export const Orbital3DSystem: React.FC = () => {
     const handlePointerLeave = () => {
       mousePosRef.current.set(-9999, -9999);
       normalizedMouseRef.current = { x: 0, y: 0 };
-      if (!focusedStationId) {
+      if (!activeStationIdRef.current) {
         setHoveredStation(null);
+        setTooltipPos(null);
       }
-      canvas.style.cursor = 'default';
     };
 
     const handleClick = () => {
@@ -421,139 +527,63 @@ export const Orbital3DSystem: React.FC = () => {
       renderer.dispose();
       starGeometry.dispose();
       starMaterial.dispose();
-      coreGeometry.dispose();
-      coreMaterial.dispose();
-      coronaGeom.dispose();
-      coronaMat.dispose();
+      coreGeom.dispose();
+      coreMat.dispose();
+      coronaInnerGeom.dispose();
+      coronaInnerMat.dispose();
+      coronaMidGeom.dispose();
+      coronaMidMat.dispose();
+      coronaOuterGeom.dispose();
+      coronaOuterMat.dispose();
     };
-  }, [handleNavigateStation, focusedStationId]);
+  }, [handleNavigateStation]);
 
-  const handleStationFocus = (station: OrbitalStationConfig) => {
-    setFocusedStationId(station.id);
-    setHoveredStation(station);
-  };
-
-  const handleStationBlur = () => {
-    setFocusedStationId(null);
-    setHoveredStation(null);
+  const getStationIcon = (id: string) => {
+    if (id === 'station-apod') return <BiRocket className="w-3.5 h-3.5" />;
+    if (id === 'station-gallery') return <BiImages className="w-3.5 h-3.5" />;
+    return <BiInfoCircle className="w-3.5 h-3.5" />;
   };
 
   return (
-    <div className="relative w-full flex flex-col items-center select-none">
-      {/* 3D Canvas Container */}
-      <div
-        ref={containerRef}
-        className="relative w-full h-[380px] sm:h-[480px] lg:h-[520px] flex items-center justify-center overflow-visible"
-      >
-        {/* Canvas WebGL */}
-        <canvas ref={canvasRef} className="w-full h-full block touch-none" />
+    <div
+      ref={containerRef}
+      className="relative w-full h-full flex items-center justify-center overflow-visible select-none"
+    >
+      {/* Canvas WebGL a pantalla completa del contenedor */}
+      <canvas ref={canvasRef} className="w-full h-full block touch-none" />
 
-        {/* Central NASA Emblem Pod */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center justify-center z-10">
-          <div className="relative flex items-center justify-center w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-slate-950/85 border border-cyan-500/40 shadow-[0_0_25px_rgba(6,182,212,0.4)] backdrop-blur-md">
-            <div
-              className="absolute inset-[-3px] rounded-full border border-dashed border-cyan-400/30 animate-spin motion-reduce:animate-none"
-              style={{ animationDuration: '14s' }}
-            />
-            <img
-              src={nasa}
-              alt="NASA"
-              className="w-10 h-10 sm:w-13 sm:h-13 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Human-Centered Interactive Card */}
-      <div className="w-full max-w-lg px-4 -mt-2 mb-6 z-20">
+      {/* Floating 3D Tooltip al interactuar con cualquier planeta */}
+      {hoveredStation && tooltipPos && (
         <div
-          className={`rounded-2xl border transition-all duration-300 backdrop-blur-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-            hoveredStation
-              ? 'bg-slate-950/90 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.2)]'
-              : 'bg-slate-950/60 border-slate-800/80 shadow-hud-panel'
-          }`}
+          className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-3 transition-opacity duration-200"
+          style={{
+            left: `${tooltipPos.x}px`,
+            top: `${tooltipPos.y - 15}px`,
+          }}
         >
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <BiCompass
-                className={`w-4 h-4 ${
-                  hoveredStation ? 'text-cyan-400 animate-spin' : 'text-slate-500'
-                }`}
-                style={{ animationDuration: '8s' }}
-              />
-              <span className="text-[11px] font-mono tracking-wider text-cyan-400 font-semibold uppercase">
-                {hoveredStation ? hoveredStation.name : 'Exploración Orbital'}
+          <div className="bg-slate-950/90 border border-cyan-400/60 rounded-xl px-3.5 py-2 shadow-[0_0_20px_rgba(6,182,212,0.4)] backdrop-blur-md flex items-center space-x-2.5">
+            <span
+              className="w-2.5 h-2.5 rounded-full animate-pulse"
+              style={{ backgroundColor: hoveredStation.color }}
+            />
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-white tracking-wide flex items-center space-x-1.5">
+                <span>{hoveredStation.name}</span>
+                <span className="text-cyan-300">{getStationIcon(hoveredStation.id)}</span>
+              </span>
+              <span className="text-[10px] text-cyan-400 font-mono">
+                {hoveredStation.designation} • Clic para entrar
               </span>
             </div>
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
-              {hoveredStation ? hoveredStation.designation : 'Selecciona un destino celeste'}
-            </h2>
-            <p className="text-xs text-slate-300 font-normal leading-relaxed max-w-sm">
-              {hoveredStation
-                ? hoveredStation.description
-                : 'Toca o haz clic sobre los planetas en órbita para navegar.'}
-            </p>
           </div>
-
-          {/* Action Trigger */}
-          {hoveredStation ? (
-            <button
-              type="button"
-              onClick={() => handleNavigateStation(hoveredStation)}
-              className="w-full sm:w-auto min-h-[48px] px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-cyan-950 font-bold text-xs uppercase tracking-wider inline-flex items-center justify-center space-x-2 shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 active:scale-95 cursor-pointer flex-shrink-0"
-            >
-              <span>Explorar</span>
-              <BiRocket className="w-4 h-4" />
-            </button>
-          ) : (
-            <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-400 border border-slate-800 px-3 py-2 rounded-xl bg-slate-900/40">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span>3 destinos activos</span>
-            </div>
-          )}
         </div>
+      )}
+
+      {/* Guía interactiva sutil en la esquina inferior */}
+      <div className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 z-20 pointer-events-none hidden sm:flex items-center space-x-2 bg-slate-950/60 border border-slate-800/80 px-3 py-1.5 rounded-full backdrop-blur-md text-[11px] text-slate-400 font-normal">
+        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+        <span>Haz clic sobre cualquier planeta para navegar</span>
       </div>
-
-      {/* Accessible Keyboard & Touch Navigation Controls (WCAG 2.1 AA & Touch Targets >= 48px) */}
-      <nav
-        aria-label="Controles de navegación orbital directa"
-        className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl px-4 z-20"
-      >
-        {ORBITAL_STATIONS.map((station) => {
-          const isSelected = hoveredStation?.id === station.id;
-          const getIcon = () => {
-            if (station.id === 'station-apod') return <BiRocket className="w-4 h-4" />;
-            if (station.id === 'station-gallery') return <BiImages className="w-4 h-4" />;
-            return <BiInfoCircle className="w-4 h-4" />;
-          };
-
-          return (
-            <button
-              key={station.id}
-              type="button"
-              onClick={() => handleNavigateStation(station)}
-              onMouseEnter={() => setHoveredStation(station)}
-              onMouseLeave={() => setHoveredStation(null)}
-              onFocus={() => handleStationFocus(station)}
-              onBlur={handleStationBlur}
-              className={`min-h-[48px] px-4 py-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400 active:scale-95 ${
-                isSelected
-                  ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200 shadow-glow-cyan'
-                  : 'bg-slate-950/70 hover:bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:border-slate-700'
-              }`}
-            >
-              <div className="flex items-center space-x-2.5">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: station.color }}
-                />
-                <span>{station.name}</span>
-              </div>
-              <span className="text-slate-400">{getIcon()}</span>
-            </button>
-          );
-        })}
-      </nav>
     </div>
   );
 };
