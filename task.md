@@ -44,8 +44,8 @@
   - [x] Verificación Impeccable (`impeccable detect`): 0 anti-patrones.
   - [x] Pruebas unitarias y compilación estática (`build`).
   - [x] `git add` y `git commit` (Conventional Commits).
-  - [ ] `git push -u origin feat/TASK-016-apod-first-overhaul`.
-  - [ ] Crear Pull Request con `gh pr create`.
-  - [ ] Actualizar descripción del PR vía GitHub API.
+  - [x] `git push -u origin feat/TASK-016-apod-first-overhaul`.
+  - [x] Crear Pull Request con `gh pr create` (#16).
+  - [x] Descripción del PR fijada al crearlo (`--body-file`).
   - [x] Reporte técnico en `docs/walkthroughs/TASK-016-apod-first-overhaul.md`.
   - [ ] Merge a `main` vía Squash y limpieza de rama (requiere confirmación del usuario: despliega a producción).
