@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { BiCheck, BiGlobe, BiGridAlt, BiSun } from 'react-icons/bi';
+import { BiCheck, BiGridAlt, BiSun } from 'react-icons/bi';
+import { Flag } from '../Flag/Flag';
 import { Mark } from '../Mark/Mark';
 import { useI18n } from '../../i18n/I18n';
 import { LOCALES, LOCALE_NAMES, Locale } from '../../i18n/messages';
@@ -93,7 +94,7 @@ const LanguageSwitch: React.FC = () => {
   const { t, locale, setLocale } = useI18n();
   return (
     <>
-      {/* Wide screens show every language as a segmented control; phones open a menu. */}
+      {/* Wide screens show every language as a segmented control, each with its flag; phones open a menu. */}
       <div role="group" aria-label={t('lang.label')} className={`hidden md:flex ${TRACK}`}>
         {LOCALES.map((l) => (
           <button
@@ -104,10 +105,11 @@ const LanguageSwitch: React.FC = () => {
             title={LOCALE_NAMES[l].name}
             onClick={() => setLocale(l)}
             // 40px to see, 48px to touch: the pseudo-element widens the target.
-            className={`relative min-h-10 min-w-10 rounded-full px-2.5 text-small font-medium tracking-[0.08em] transition-[color,background-color,box-shadow] duration-200 before:absolute before:-inset-1 before:rounded-full ${
+            className={`group relative flex min-h-10 min-w-10 items-center gap-2 rounded-full px-2.5 text-small font-medium tracking-[0.08em] transition-[color,background-color,box-shadow] duration-200 before:absolute before:-inset-1 before:rounded-full ${
               locale === l ? RAISED : 'text-faint hover:text-fg'
             }`}
           >
+            <Flag locale={l} current={locale === l} className="h-4 w-4" />
             <span aria-hidden="true">{LOCALE_NAMES[l].short}</span>
             <span className="sr-only">{LOCALE_NAMES[l].name}</span>
           </button>
@@ -119,9 +121,9 @@ const LanguageSwitch: React.FC = () => {
 };
 
 /**
- * Phones: a globe and the current language's code open a menu of the three languages, each named in
- * itself, the current one badged in aurora and checked. Arrow keys move, Escape or a tap outside closes,
- * and focus goes back to the button.
+ * Phones: the current language's flag and code open a menu of the three languages, each with its flag and
+ * named in itself, the current one ringed in aurora and checked. Arrow keys move, Escape or a tap outside
+ * closes, and focus goes back to the button.
  */
 const LanguageMenu: React.FC = () => {
   const { t, locale, setLocale } = useI18n();
@@ -173,9 +175,9 @@ const LanguageMenu: React.FC = () => {
         aria-controls="language-menu"
         aria-label={`${t('lang.label')}: ${LOCALE_NAMES[locale].name}`}
         onClick={() => setOpen((o) => !o)}
-        className={`btn btn-ghost min-h-12 gap-1.5 px-3 text-small font-semibold tracking-[0.08em] ${open ? 'text-fg' : ''}`}
+        className={`btn btn-ghost min-h-12 gap-2 px-3 text-small font-semibold tracking-[0.08em] ${open ? 'text-fg' : ''}`}
       >
-        <BiGlobe aria-hidden="true" className={`h-[1.125rem] w-[1.125rem] transition-colors ${open ? 'text-[var(--aurora)]' : 'text-muted'}`} />
+        <Flag locale={locale} current className="h-5 w-5" />
         <span aria-hidden="true">{LOCALE_NAMES[locale].short}</span>
       </button>
 
@@ -198,20 +200,11 @@ const LanguageMenu: React.FC = () => {
                   aria-checked={current}
                   lang={l}
                   onClick={() => choose(l)}
-                  className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-2.5 text-left transition-colors ${
+                  className={`group flex min-h-12 w-full items-center gap-3 rounded-xl px-2.5 text-left transition-colors ${
                     current ? 'bg-white/[0.07] text-fg' : 'text-muted hover:bg-white/[0.05] hover:text-fg focus-visible:text-fg'
                   }`}
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`flex h-8 w-10 shrink-0 items-center justify-center rounded-lg text-small font-semibold tracking-[0.06em] ${
-                      current
-                        ? 'bg-[linear-gradient(135deg,var(--accent),var(--nebula))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]'
-                        : 'bg-white/[0.06] text-muted'
-                    }`}
-                  >
-                    {LOCALE_NAMES[l].short}
-                  </span>
+                  <Flag locale={l} current={current} className="h-8 w-8" />
                   <span className="min-w-0 flex-1 truncate">{LOCALE_NAMES[l].name}</span>
                   {current && <BiCheck aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--aurora)]" />}
                 </button>
