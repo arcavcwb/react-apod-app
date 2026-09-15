@@ -76,7 +76,8 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ title, dateLabel, url,
   const u = encodeURIComponent(url);
   const txt = encodeURIComponent(text);
   const links = [
-    { label: 'WhatsApp', href: `https://wa.me/?text=${txt}%20${u}`, Icon: SiWhatsapp },
+    // The link on its own line, so WhatsApp builds its preview card from it.
+    { label: 'WhatsApp', href: `https://wa.me/?text=${txt}%0A${u}`, Icon: SiWhatsapp },
     { label: 'Telegram', href: `https://t.me/share/url?url=${u}&text=${txt}`, Icon: SiTelegram },
     { label: 'X', href: `https://x.com/intent/post?text=${txt}&url=${u}`, Icon: SiX },
     { label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`, Icon: SiLinkedin },
