@@ -1,18 +1,22 @@
 @font-face {
-  font-family: 'Source Serif 4';
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
-  src: url('./assets/fonts/source-serif-4-latin.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Archivo';
+  font-family: 'Public Sans';
   font-style: normal;
   font-weight: 100 900;
-  font-stretch: 62% 125%;
   font-display: swap;
-  src: url('./assets/fonts/archivo-latin.woff2') format('woff2');
+  src: url('./assets/fonts/public-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* NASA titles carry Hawaiian and other diacritics (Nā, Pū); this file loads only when one appears. */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./assets/fonts/public-sans-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+    U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 @tailwind base;
@@ -20,55 +24,69 @@
 @tailwind utilities;
 
 :root {
-  --ink: #0a0a0b;
-  --ink-2: #131315;
-  --star: #f2f0ea;
-  --copy: #d9d6ce;
-  --muted: #a19f98;
-  --faint: #85837d;
-  --line: #2a2a2e;
-  --line-strong: #66666d;
-  --red: #ff5a47;
+  --space: #030712;
+  --panel: #0b1120;
+  --fg: #e8ecf2;
+  --muted: #94a3b8;
+  --faint: #7c8799;
+  --edge: #5b6b82;
+  --accent: #416ce6;
+  --accent-strong: #3760d8;
+  /* Quiet companions of the orbital blue, for cosmic accents only (rims, glows, hairlines), never for text. */
+  --nebula: #7c5cf0;
+  --aurora: #37c6e8;
   --header-h: 3.5rem;
+  /* The floating header plus the air above it. */
+  --header-space: calc(var(--header-h) + 0.75rem);
   color-scheme: dark;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-h: 4rem;
+    --header-space: calc(var(--header-h) + 1rem);
+  }
 }
 
 @layer base {
   html {
-    background: var(--ink);
-    color: var(--copy);
-    scrollbar-color: var(--line-strong) var(--ink);
+    background: var(--space);
+    color: var(--fg);
+    scrollbar-color: var(--edge) var(--space);
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     margin: 0;
     min-height: 100svh;
-    font-family: Archivo, system-ui, sans-serif;
+    font-family: 'Public Sans', system-ui, sans-serif;
+    font-size: clamp(1rem, 0.9rem + 0.22vw, 1.1875rem);
+    line-height: 1.6;
     font-feature-settings: 'kern', 'liga';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background: var(--red);
-    color: var(--ink);
+    background: var(--accent);
+    color: #fff;
   }
 
   :focus-visible {
-    outline: 2px solid var(--red);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 
   input,
   select,
   textarea {
-    caret-color: var(--red);
-    accent-color: var(--red);
+    caret-color: var(--accent);
+    accent-color: var(--accent);
   }
 
   a {
-    text-underline-offset: 0.22em;
+    text-underline-offset: 0.25em;
     text-decoration-thickness: 1px;
   }
 
@@ -77,111 +95,307 @@
   h3 {
     text-wrap: balance;
   }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  time,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer components {
-  /* Chart-margin notation: spaced caps with tabular figures. */
-  .notation {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
-    font-weight: 500;
-    font-stretch: 112%;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    font-variant-numeric: tabular-nums;
+  /*
+   * Buttons are pills with depth, larger on desktop: lit from above (a top highlight over a lighter upper
+   * half), grounded by a darker lower rim and a soft cast shadow. Primary is the orbital blue leaning
+   * violet; secondary a raised tonal surface; every arrow is cosmic. A fine pointer lifts them a pixel and
+   * brightens them (never on touch, so no hover sticks); a press sinks them; arrows lean the way they lead.
+   * Each variant sets its surface in --btn-bg and --btn-shadow, so an action's circle on phones can wear it.
+   */
+  .btn {
+    @apply relative inline-flex min-h-12 select-none items-center justify-center gap-2 whitespace-nowrap rounded-full px-6 font-medium lg:min-h-[3.25rem] lg:px-7;
+    background: var(--btn-bg, transparent);
+    box-shadow: var(--btn-shadow, none);
+    transform: translateY(var(--lift, 0px)) scale(var(--press, 1));
+    transition:
+      color 200ms,
+      background 200ms,
+      box-shadow 250ms,
+      filter 200ms,
+      transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn svg {
+    @apply shrink-0 transition-transform duration-300 ease-out-expo;
+  }
+  .btn-primary {
+    color: #fff;
+    text-shadow: 0 1px 1px rgb(24 18 90 / 0.35);
+    --btn-bg: linear-gradient(180deg, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0) 52%),
+      linear-gradient(135deg, #5d85f0 0%, var(--accent) 45%, #5a4fd8 100%);
+    --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.38), inset 0 -2px 0 rgb(24 18 90 / 0.35), 0 0 0 1px rgb(110 130 255 / 0.35),
+      0 2px 4px rgb(0 0 0 / 0.35), 0 14px 30px -12px rgb(90 79 216 / 0.9);
+  }
+  .btn-ghost {
+    color: var(--fg);
+    --btn-bg: linear-gradient(180deg, rgb(232 236 242 / 0.13), rgb(232 236 242 / 0.04));
+    --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -1px 0 rgb(0 0 0 / 0.35), 0 0 0 1px rgb(232 236 242 / 0.13),
+      0 2px 4px rgb(0 0 0 / 0.3), 0 10px 22px -12px rgb(0 0 0 / 0.9);
+  }
+  /*
+   * Cosmic, the design every arrow shares: a deep core lit orbital blue, an aurora rim (orbital blue into
+   * nebula violet into aurora cyan) that swirls, and a nebula glow that blooms, both only under the pointer.
+   */
+  .btn-cosmic {
+    color: #fff;
+    isolation: isolate;
+    --btn-bg: radial-gradient(120% 120% at 30% 20%, rgb(65 108 230 / 0.45), transparent 60%),
+      linear-gradient(180deg, rgb(22 28 52), rgb(5 9 22));
+    --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), inset 0 -1px 0 rgb(0 0 0 / 0.45), 0 2px 4px rgb(0 0 0 / 0.4),
+      0 12px 28px -12px rgb(0 0 0 / 0.9);
+  }
+  .btn-cosmic::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(from var(--aurora-angle), var(--accent), var(--nebula), var(--aurora), var(--accent));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.8;
+    transition: opacity 300ms;
+    pointer-events: none;
+  }
+  .btn-cosmic::after {
+    content: '';
+    position: absolute;
+    inset: -35%;
+    z-index: -1;
+    border-radius: 9999px;
+    background: radial-gradient(closest-side, rgb(124 92 240 / 0.5), rgb(55 198 232 / 0.18) 65%, transparent);
+    opacity: 0;
+    transform: scale(0.6);
+    transition:
+      opacity 400ms,
+      transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .btn-icon {
+    @apply w-12 px-0 lg:w-[3.25rem] lg:px-0;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover {
+      --lift: -1px;
+    }
+    .btn-primary:hover {
+      filter: brightness(1.08);
+      --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.42), inset 0 -2px 0 rgb(24 18 90 / 0.35), 0 0 0 1px rgb(130 150 255 / 0.5),
+        0 3px 6px rgb(0 0 0 / 0.35), 0 20px 38px -12px rgb(90 79 216 / 1);
+    }
+    .btn-ghost:hover {
+      --btn-bg: linear-gradient(180deg, rgb(232 236 242 / 0.19), rgb(232 236 242 / 0.07));
+      --btn-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), inset 0 -1px 0 rgb(0 0 0 / 0.35), 0 0 0 1px rgb(232 236 242 / 0.24),
+        0 3px 6px rgb(0 0 0 / 0.3), 0 14px 26px -12px rgb(0 0 0 / 0.95);
+    }
+    .btn-cosmic:hover::before {
+      opacity: 1;
+      animation: aurora-spin 3s linear infinite;
+    }
+    .btn-cosmic:hover::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .btn:hover .lean-right {
+      transform: translateX(3px);
+    }
+    .btn:hover .lean-left {
+      transform: translateX(-3px);
+    }
+  }
+  .btn:active {
+    --press: 0.97;
+    --lift: 0px;
+  }
+  .btn:focus-visible .lean-right {
+    transform: translateX(3px);
+  }
+  .btn:focus-visible .lean-left {
+    transform: translateX(-3px);
+  }
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    --lift: 0px;
+    --press: 1;
+    --btn-bg: transparent;
+    --btn-shadow: inset 0 0 0 1px rgb(232 236 242 / 0.1);
+    cursor: not-allowed;
+    opacity: 0.35;
+    filter: none;
+    text-shadow: none;
+  }
+  .btn:disabled svg,
+  .btn[aria-disabled='true'] svg {
+    transform: none;
+  }
+  .btn-cosmic:disabled::before {
+    opacity: 0.5;
   }
 
-  /* Text control in the atlas voice. At least 48px tall for touch. */
-  .control {
-    @apply notation inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap border border-line-strong px-3 text-star transition-colors duration-200 sm:px-4;
+  /*
+   * An action: a pill from 640px up; on phones a 48px circle wearing the button's surface, with a short
+   * caption under it, so a row of actions stays small. The icon sits in .action-icon; .btn-action-trail
+   * puts it after the label in the pill.
+   */
+  .action-icon {
+    display: contents;
   }
-  .control:hover {
-    @apply border-star;
+  @media (max-width: 39.99rem) {
+    .btn-action {
+      flex-direction: column;
+      gap: 0.375rem;
+      min-height: 0;
+      padding: 0;
+      background: none;
+      box-shadow: none;
+      filter: none;
+      text-shadow: none;
+      color: var(--muted);
+      font-size: clamp(0.8125rem, 0.74rem + 0.16vw, 0.9375rem);
+      line-height: 1.2;
+    }
+    .btn-action .action-icon {
+      display: flex;
+      width: 3rem;
+      height: 3rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      color: var(--fg);
+      background: var(--btn-bg);
+      box-shadow: var(--btn-shadow);
+    }
+    .btn-primary.btn-action .action-icon {
+      color: #fff;
+    }
   }
-  .control:disabled,
-  .control[aria-disabled='true'] {
-    @apply cursor-not-allowed border-line text-faint;
+  @media (min-width: 40rem) {
+    .btn-action-trail .action-icon > svg {
+      order: 2;
+    }
+  }
+
+  /*
+   * Phones: the actions are galactic circles, each lit by its own corner of the sky, with a highlight on top,
+   * a light rim and a glow of its own colour. Share: orbital blue into violet. HD: violet into nebula
+   * magenta. Official page: aurora cyan into blue. Random day: rose into ember. Details: cyan into violet.
+   * The light ends are deepened so the white icons keep 3:1.
+   */
+  @media (max-width: 39.99rem) {
+    .galaxy-share,
+    .galaxy-hd,
+    .galaxy-official,
+    .galaxy-random,
+    .galaxy-details {
+      color: var(--fg);
+    }
+    .galaxy-share .action-icon,
+    .galaxy-hd .action-icon,
+    .galaxy-official .action-icon,
+    .galaxy-random .action-icon,
+    .galaxy-details .action-icon {
+      width: 3.25rem;
+      height: 3.25rem;
+      color: #fff;
+    }
+    .galaxy-share {
+      --btn-bg: radial-gradient(90% 90% at 30% 18%, rgb(255 255 255 / 0.3), transparent 52%), linear-gradient(140deg, #4f7cf0, #7c5cf0);
+      --btn-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18), inset 0 -2px 0 rgb(20 10 70 / 0.3), 0 10px 24px -8px rgb(124 92 240 / 0.8);
+    }
+    .galaxy-hd {
+      --btn-bg: radial-gradient(90% 90% at 30% 18%, rgb(255 255 255 / 0.28), transparent 52%), linear-gradient(140deg, #7c5cf0, #c94fd8);
+      --btn-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18), inset 0 -2px 0 rgb(60 10 70 / 0.3), 0 10px 24px -8px rgb(201 79 216 / 0.7);
+    }
+    .galaxy-official {
+      --btn-bg: radial-gradient(90% 90% at 30% 18%, rgb(255 255 255 / 0.28), transparent 52%), linear-gradient(140deg, #1590b5, #3558c9);
+      --btn-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18), inset 0 -2px 0 rgb(5 30 60 / 0.3), 0 10px 24px -8px rgb(55 198 232 / 0.6);
+    }
+    .galaxy-random {
+      --btn-bg: radial-gradient(90% 90% at 30% 18%, rgb(255 255 255 / 0.28), transparent 52%), linear-gradient(140deg, #d9486f, #c8651f);
+      --btn-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18), inset 0 -2px 0 rgb(70 15 20 / 0.3), 0 10px 24px -8px rgb(232 104 90 / 0.6);
+    }
+    .galaxy-details {
+      --btn-bg: radial-gradient(90% 90% at 30% 18%, rgb(255 255 255 / 0.28), transparent 52%), linear-gradient(140deg, #1590b5, #5a4fd8);
+      --btn-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18), inset 0 -2px 0 rgb(10 20 70 / 0.3), 0 10px 24px -8px rgb(55 150 232 / 0.65);
+    }
+  }
+
+  /* Fields (month, year, date) are the buttons' counterpart: sunk into the surface, with the same hairline rim. */
+  .field {
+    @apply rounded-full text-fg transition-[background-color,box-shadow] duration-200;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0.24), rgb(232 236 242 / 0.04));
+    box-shadow:
+      inset 0 1px 3px rgb(0 0 0 / 0.45),
+      0 0 0 1px rgb(232 236 242 / 0.12),
+      0 1px 0 rgb(255 255 255 / 0.05);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .field:hover {
+      box-shadow:
+        inset 0 1px 3px rgb(0 0 0 / 0.45),
+        0 0 0 1px rgb(232 236 242 / 0.24),
+        0 1px 0 rgb(255 255 255 / 0.06);
+    }
+  }
+
+  /* A rounded picture tile, lifted off the sky by a soft shadow. */
+  .tile {
+    @apply overflow-hidden rounded-2xl bg-panel shadow-float;
+  }
+  .tile::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/[0.08] transition-shadow duration-300;
+  }
+  /* Hover stays inside the tile (the picture zooms, the rim brightens), so a sliding row never cuts it. */
+  .group:hover .tile::after,
+  .group:focus-visible .tile::after {
+    @apply ring-2 ring-[rgb(176_186_255/0.5)];
+  }
+
+  /* The day you are on, ringed in aurora: orbital blue into nebula violet into aurora cyan. */
+  .aurora-rim {
+    position: relative;
+  }
+  .aurora-rim::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(1rem + 4px);
+    padding: 2px;
+    background: conic-gradient(from 210deg, var(--accent), var(--nebula), var(--aurora), var(--accent));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Surfaces that float over the sky: lifted by a soft offset shadow, never blurred glass. */
+  .surface-float {
+    background: rgb(11 17 32 / 0.86);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 0 0 1px rgb(232 236 242 / 0.07), 0 18px 44px -18px rgb(0 0 0 / 0.8);
   }
 
   .link {
-    @apply text-star underline decoration-line-strong transition-colors hover:decoration-red;
+    @apply underline decoration-edge transition-colors hover:decoration-accent;
   }
 
-  /* The plate: an outer neat-line, a graduated band of ticks, an inner neat-line. */
-  .plate {
-    --tick-minor: 4px;
-    --tick-major: 9px;
-    position: relative;
-    border: 1px solid var(--line-strong);
-    padding: 0.75rem;
-    background:
-      repeating-linear-gradient(90deg, var(--muted) 0 1px, transparent 1px 64px) top left / 100% var(--tick-major) no-repeat,
-      repeating-linear-gradient(90deg, var(--line-strong) 0 1px, transparent 1px 8px) top left / 100% var(--tick-minor) no-repeat,
-      repeating-linear-gradient(90deg, var(--muted) 0 1px, transparent 1px 64px) bottom left / 100% var(--tick-major) no-repeat,
-      repeating-linear-gradient(90deg, var(--line-strong) 0 1px, transparent 1px 8px) bottom left / 100% var(--tick-minor) no-repeat,
-      repeating-linear-gradient(180deg, var(--muted) 0 1px, transparent 1px 64px) top left / var(--tick-major) 100% no-repeat,
-      repeating-linear-gradient(180deg, var(--line-strong) 0 1px, transparent 1px 8px) top left / var(--tick-minor) 100% no-repeat,
-      repeating-linear-gradient(180deg, var(--muted) 0 1px, transparent 1px 64px) top right / var(--tick-major) 100% no-repeat,
-      repeating-linear-gradient(180deg, var(--line-strong) 0 1px, transparent 1px 8px) top right / var(--tick-minor) 100% no-repeat;
-  }
-  .plate-field {
-    position: relative;
-    height: 100%;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    background: var(--ink);
-  }
-  /* An empty plate: errors and missing days are drawn, never shouted in red. */
-  .plate-empty {
-    border: 1px dashed var(--line-strong);
-    background: var(--ink);
-  }
-
-  /* The date ruler: a native range input graduated by day. */
-  .ruler {
-    --days: 30;
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 3rem;
-    margin: 0;
-    background:
-      linear-gradient(var(--line-strong), var(--line-strong)) center / 100% 1px no-repeat,
-      repeating-linear-gradient(
-          90deg,
-          var(--muted) 0 1px,
-          transparent 1px calc((100% - 1px) / (var(--days) - 1))
-        )
-        center / 100% 0.875rem no-repeat;
-    cursor: pointer;
-    touch-action: pan-y;
-  }
-  .ruler::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 0.1875rem;
-    height: 2.25rem;
-    border: 0;
-    border-radius: 0;
-    background: var(--red);
-    box-shadow: 0 0 0 0.3125rem var(--ink);
-  }
-  .ruler::-moz-range-thumb {
-    width: 0.1875rem;
-    height: 2.25rem;
-    border: 0;
-    border-radius: 0;
-    background: var(--red);
-    box-shadow: 0 0 0 0.3125rem var(--ink);
-  }
-  .ruler::-moz-range-track {
-    background: transparent;
-  }
-  .ruler:focus-visible {
-    outline-offset: 0.375rem;
-  }
-  .ruler:disabled {
-    cursor: default;
+  /* Placeholder for content on its way: a faint nebula light passes over it, the only motion at rest, and only while loading. */
+  .skeleton {
+    background: linear-gradient(100deg, transparent 38%, rgb(124 92 240 / 0.12) 50%, rgb(55 198 232 / 0.08) 56%, transparent 66%) var(--panel);
+    background-size: 250% 100%;
+    animation: nebula-pass 2.4s ease-in-out infinite;
   }
 
   /* color-scheme: dark already draws a light picker icon; only the cursor needs setting. */
@@ -190,28 +404,445 @@
   }
 }
 
-@layer utilities {
-  .vertical-notation {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
+/* The home fits one screen everywhere; below a usable height it becomes an ordinary scrolling page. */
+.stage {
+  min-height: 100svh;
+}
+@media (min-height: 30rem) {
+  .stage {
+    height: 100vh;
+    height: 100svh;
+  }
+}
+/* Every other page: one screen on desktop, an ordinary scrolling page on phones. */
+.stage-lg {
+  min-height: 100svh;
+}
+@media (min-width: 64rem) and (min-height: 30rem) {
+  .stage-lg {
+    height: 100vh;
+    height: 100svh;
+  }
+}
+/* Scoped under .stage: Tailwind emits lg: variants last, and these must still win on short screens. */
+@media (max-height: 50rem) {
+  .stage .stage-excerpt {
+    -webkit-line-clamp: 2;
+  }
+}
+@media (max-height: 45rem) {
+  .stage .stage-excerpt {
+    display: none;
+  }
+}
+@media (max-height: 36rem) {
+  .stage .stage-dock {
+    display: none;
   }
 }
 
-/* Focus pull: a blurred low-resolution plate resolving to the sharp image. */
-@keyframes focus-pull {
+/* Pages move sideways by swipe, wheel, keys and buttons; the dots replace the scrollbar. */
+.pager,
+.strip {
+  scrollbar-width: none;
+}
+.pager::-webkit-scrollbar,
+.strip::-webkit-scrollbar {
+  display: none;
+}
+.strip {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l, 0px), #000 calc(100% - var(--fade-r, 0px)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-l, 0px), #000 calc(100% - var(--fade-r, 0px)), transparent);
+}
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--edge) transparent;
+}
+
+/* The month's carousel: one tile size (smaller on short desktop screens). */
+.strip {
+  --tile: 5rem;
+}
+.strip-tile {
+  width: var(--tile);
+  height: var(--tile);
+}
+@media (min-width: 64rem) {
+  .strip {
+    --tile: 5.5rem;
+  }
+}
+@media (min-width: 64rem) and (max-height: 50rem) {
+  .strip {
+    --tile: 4.5rem;
+  }
+}
+/*
+ * On a curve: whichever day sits in the middle faces you, largest and in front; the others turn away and
+ * recede toward the edges. Driven by the carousel's own scroll, so it moves only when you do. Spacers let
+ * the first and last days reach the middle. Without scroll-driven animations it simply stays flat.
+ */
+@supports (animation-timeline: view()) {
+  .strip {
+    container-type: inline-size;
+  }
+  .strip::before,
+  .strip::after {
+    content: '';
+    flex: 0 0 max(0px, calc(50cqw - var(--tile) / 2 - 0.75rem));
+  }
+  .strip > li {
+    position: relative;
+    animation: coverflow linear both;
+    animation-timeline: view(inline);
+  }
+}
+@keyframes coverflow {
+  0% {
+    transform: perspective(700px) rotateY(50deg) scale(0.74);
+    opacity: 0.4;
+    z-index: 1;
+  }
+  38% {
+    transform: perspective(700px) rotateY(26deg) scale(0.9);
+    opacity: 0.85;
+    z-index: 2;
+  }
+  50% {
+    transform: perspective(700px) rotateY(0deg) scale(1.22);
+    opacity: 1;
+    z-index: 3;
+  }
+  62% {
+    transform: perspective(700px) rotateY(-26deg) scale(0.9);
+    opacity: 0.85;
+    z-index: 2;
+  }
+  100% {
+    transform: perspective(700px) rotateY(-50deg) scale(0.74);
+    opacity: 0.4;
+    z-index: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .strip > li {
+    animation: none !important;
+  }
+}
+
+/* The explanation card grows from where the text begins to the whole left column, and folds back. */
+.reading-in {
+  animation: reading-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.reading-out {
+  animation: reading-out 380ms cubic-bezier(0.55, 0, 0.1, 1) both;
+}
+@keyframes reading-in {
+  from {
+    clip-path: inset(var(--from, 0px) 0 0 0 round 2rem);
+    opacity: 0.3;
+  }
+}
+@keyframes reading-out {
+  to {
+    clip-path: inset(var(--from, 0px) 0 0 0 round 2rem);
+    opacity: 0;
+  }
+}
+
+/* Phones: without a native share sheet, the share menu is a sheet along the bottom, under the thumb.
+   Plain CSS: Tailwind's max-* variants are off in this project (the raw can-hover screen disables them). */
+@media (max-width: 39.99rem) {
+  .share-menu.share-menu {
+    position: fixed;
+    inset: auto 0.75rem max(0.75rem, env(safe-area-inset-bottom)) 0.75rem;
+    z-index: 50;
+    width: auto;
+    margin: 0;
+    padding: 0.5rem;
+  }
+}
+
+/*
+ * Round flags for the languages: their real colours under a little starlight (a sheen from the upper left,
+ * a fine rim, a shade at the foot), so they sit in the cosmic interface. The current language is ringed in
+ * aurora; the others rest slightly dimmed and light up under the pointer.
+ */
+.flag {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 9999px;
+}
+.flag > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  clip-path: circle(50%);
+}
+.flag::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.38), transparent 46%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.22),
+    inset 0 -3px 6px rgb(3 7 18 / 0.35);
+  pointer-events: none;
+}
+.flag-dim {
+  filter: saturate(0.75) brightness(0.82);
+  transition: filter 200ms;
+}
+.group:hover .flag-dim,
+.group:focus-visible .flag-dim {
+  filter: none;
+}
+.flag-current::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  padding: 1.5px;
+  background: conic-gradient(from 210deg, var(--accent), var(--nebula), var(--aurora), var(--accent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* The phone language menu unfolds from its button, at the header's right. */
+.lang-menu {
+  transform-origin: top right;
+  animation: lang-menu-in 240ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes lang-menu-in {
   from {
     opacity: 0;
-    filter: blur(10px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
+    transform: translateY(-6px) scale(0.96);
   }
 }
 
-::view-transition-old(root),
+/* Today's photograph rises into place once; its light blooms in after it. */
+.float-in {
+  animation: float-in 1000ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes float-in {
+  from {
+    transform: translateY(1.25rem) scale(0.985);
+  }
+}
+
+@keyframes nebula-pass {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+/* The aurora rim's starting angle, animatable so the rim can swirl. */
+@property --aurora-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 210deg;
+}
+@keyframes aurora-spin {
+  to {
+    --aurora-angle: 570deg;
+  }
+}
+
+/* Pictures develop: the sharp picture fades in over its blurred preview. Opacity only, so it stays
+   cheap while a view transition is capturing the page. */
+@keyframes develop {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Two fixed star layers; the near one drifts a little with the page where scroll timelines exist. */
+@supports (animation-timeline: scroll()) {
+  .stars-near {
+    animation: drift linear both;
+    animation-timeline: scroll(root);
+  }
+}
+@keyframes drift {
+  to {
+    transform: translateY(-5vh);
+  }
+}
+
+/*
+ * Travelling between days is one symmetric move on one ease-in-out: the outgoing photograph slides
+ * away, shrinks and softens exactly as the incoming one mirrors it in from the other side; title and
+ * text slide a shorter way in step. Everything else crossfades. Gallery tiles morph into the photograph.
+ */
+:root {
+  --travel-ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+/* The animating layer never swallows clicks: they reach the new page underneath. */
+::view-transition {
+  pointer-events: none;
+}
+/* The page fades through rather than across: the old page leaves first, the new one arrives after it,
+   so nothing overlaps and the moving photograph is all that shows in between. */
+::view-transition-old(root) {
+  animation: 200ms cubic-bezier(0.4, 0, 1, 1) both vt-fade-out;
+}
 ::view-transition-new(root) {
-  animation-duration: 220ms;
+  animation: 320ms cubic-bezier(0, 0, 0.2, 1) 160ms both vt-fade-in;
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+::view-transition-group(photo),
+::view-transition-group(day-title),
+::view-transition-group(day-text),
+::view-transition-group(gallery-grid),
+::view-transition-group(gallery-title) {
+  animation-duration: 600ms;
+  animation-timing-function: var(--travel-ease);
+}
+/* A tile growing into a photograph brings another day's words: they fade through, never across. */
+:root[data-morph]::view-transition-old(day-title),
+:root[data-morph]::view-transition-old(day-text) {
+  animation: 200ms cubic-bezier(0.4, 0, 1, 1) both vt-fade-out;
+}
+:root[data-morph]::view-transition-new(day-title),
+:root[data-morph]::view-transition-new(day-text) {
+  animation: 320ms cubic-bezier(0, 0, 0.2, 1) 160ms both vt-fade-in;
+}
+/* The day arrows keep to the card's edges while the photographs trade places. */
+::view-transition-group(day-prev),
+::view-transition-group(day-next) {
+  animation-duration: 600ms;
+  animation-timing-function: var(--travel-ease);
+}
+/* The current section's pill slides between Today and Gallery. */
+::view-transition-group(nav-pill) {
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* A tile growing into the photograph starts quickly and settles softly; travel between days keeps its symmetric ease. */
+:root:not([data-travel])::view-transition-group(photo) {
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* A square tile growing into a wide frame (or back) fills the moving box instead of spilling out of it. */
+::view-transition-old(photo),
+::view-transition-new(photo) {
+  height: 100%;
+  object-fit: cover;
+}
+/* While a home tile morphs into its day, the hero gives up the shared name (a duplicate would cancel the transition). */
+:root[data-morph] .hero-photo {
+  view-transition-name: none !important;
+}
+:root[data-travel='next']::view-transition-old(photo),
+:root[data-travel='next']::view-transition-old(gallery-grid) {
+  animation: 600ms var(--travel-ease) both photo-out-left;
+}
+:root[data-travel='next']::view-transition-new(photo),
+:root[data-travel='next']::view-transition-new(gallery-grid) {
+  animation: 600ms var(--travel-ease) both photo-in-right;
+}
+:root[data-travel='prev']::view-transition-old(photo),
+:root[data-travel='prev']::view-transition-old(gallery-grid) {
+  animation: 600ms var(--travel-ease) both photo-out-right;
+}
+:root[data-travel='prev']::view-transition-new(photo),
+:root[data-travel='prev']::view-transition-new(gallery-grid) {
+  animation: 600ms var(--travel-ease) both photo-in-left;
+}
+:root[data-travel='next']::view-transition-old(day-title),
+:root[data-travel='next']::view-transition-old(day-text),
+:root[data-travel='next']::view-transition-old(gallery-title) {
+  animation: 280ms cubic-bezier(0.4, 0, 1, 1) both text-out-left;
+}
+:root[data-travel='next']::view-transition-new(day-title),
+:root[data-travel='next']::view-transition-new(day-text),
+:root[data-travel='next']::view-transition-new(gallery-title) {
+  animation: 300ms cubic-bezier(0, 0, 0.2, 1) 240ms both text-in-right;
+}
+:root[data-travel='prev']::view-transition-old(day-title),
+:root[data-travel='prev']::view-transition-old(day-text),
+:root[data-travel='prev']::view-transition-old(gallery-title) {
+  animation: 280ms cubic-bezier(0.4, 0, 1, 1) both text-out-right;
+}
+:root[data-travel='prev']::view-transition-new(day-title),
+:root[data-travel='prev']::view-transition-new(day-text),
+:root[data-travel='prev']::view-transition-new(gallery-title) {
+  animation: 300ms cubic-bezier(0, 0, 0.2, 1) 240ms both text-in-left;
+}
+@keyframes photo-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-22%) scale(0.92);
+    filter: blur(8px);
+  }
+}
+@keyframes photo-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(22%) scale(0.92);
+    filter: blur(8px);
+  }
+}
+@keyframes photo-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(22%) scale(0.92);
+    filter: blur(8px);
+  }
+}
+@keyframes photo-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-22%) scale(0.92);
+    filter: blur(8px);
+  }
+}
+@keyframes text-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-2.5rem);
+  }
+}
+@keyframes text-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+}
+@keyframes text-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+}
+@keyframes text-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-2.5rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -222,6 +853,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .stars-near {
+    animation: none !important;
   }
   ::view-transition-group(*),
   ::view-transition-old(*),
