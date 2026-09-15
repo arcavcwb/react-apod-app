@@ -1,5 +1,5 @@
 import { ApodItem, ApodItemSchema, ApodListSchema } from '../contracts/apod.contract';
-import { apodToday, monthOf, monthRange } from '../utils/date';
+import { apodToday, monthOf, monthRange, shiftDay } from '../utils/date';
 
 const API_URL = 'https://api.nasa.gov/planetary/apod';
 const TIMEOUT_MS = 15_000;
@@ -123,7 +123,7 @@ export async function fetchApodByDate(date: string): Promise<ApodResult<ApodItem
   return { data: parsed.data, error: null };
 }
 
-async function fetchRange(params: Record<string, string>, month: string): Promise<ApodResult<ApodItem[]>> {
+async function fetchRange(params: Record<string, string>): Promise<ApodResult<ApodItem[]>> {
   let res = await request(params);
   // NASA's range endpoint is slow and flaky; one retry absorbs most timeouts and 5xx.
   if (res.error === 'network') res = await request(params);
@@ -133,7 +133,25 @@ async function fetchRange(params: Record<string, string>, month: string): Promis
     console.error('[APOD contract]', parsed.error.issues);
     return { data: null, error: 'contract' };
   }
-  return { data: parsed.data.filter((d) => monthOf(d.date) === month), error: null };
+  return { data: parsed.data, error: null };
+}
+
+const RECENT_DAYS = 9;
+export const peekRecent = () => readCache<ApodItem[]>(`recent:${apodToday()}`);
+
+/** The latest published days, newest first: one short range request, kept for an hour. */
+export async function fetchRecentApods(): Promise<ApodResult<ApodItem[]>> {
+  const today = apodToday();
+  const cached = peekRecent();
+  if (cached) return { data: cached, error: null };
+
+  // No end_date: NASA stops at its latest published day.
+  const res = await fetchRange({ start_date: shiftDay(today, 1 - RECENT_DAYS) });
+  if (res.error) return res;
+  const items = [...res.data].sort((a, b) => b.date.localeCompare(a.date));
+  writeCache(`recent:${today}`, items, HOUR_MS);
+  items.forEach((item) => cacheDay(item, today));
+  return { data: items, error: null };
 }
 
 /**
@@ -163,9 +181,9 @@ export async function fetchApodMonth(
   const byDate = (a: ApodItem, b: ApodItem) => a.date.localeCompare(b.date);
   const results = await Promise.all(
     chunks.map(async (params) => {
-      const res = await fetchRange(params, month);
+      const res = await fetchRange(params);
       if (res.data) {
-        collected.push(...res.data);
+        collected.push(...res.data.filter((d) => monthOf(d.date) === month));
         onProgress?.([...collected].sort(byDate));
       }
       return res;
