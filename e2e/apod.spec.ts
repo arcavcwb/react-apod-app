@@ -130,3 +130,37 @@ test.describe('gallery', () => {
     await expect(page).toHaveURL(/\/gallery\/2026-08$/);
   });
 });
+
+test.describe('translation', () => {
+  test('translates the explanation but not the title, with the original a tap away', async ({ page }) => {
+    await serveNasa(page);
+    await page.route(/\/api\/translate\?/, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ date: '2026-09-11', lang: 'es', text: 'Una galaxia espiral, en español para la prueba.' }),
+      })
+    );
+    await page.goto('/apod/2026-09-11');
+
+    await expect(page.getByRole('heading', { level: 1, name: today.title })).toBeVisible();
+    await expect(page.getByText('Una galaxia espiral, en español para la prueba.').first()).toBeAttached();
+    await expect(page.getByText('Traducción automática del texto de la NASA.').first()).toBeAttached();
+
+    await page.getByRole('button', { name: 'Ver original' }).first().click();
+    await expect(page.getByText(today.explanation.slice(0, 60)).first()).toBeAttached();
+    await expect(page.getByRole('button', { name: 'Ver traducción' }).first()).toBeAttached();
+  });
+
+  test('shows NASA\'s original when no translation is available', async ({ page }) => {
+    await serveNasa(page);
+    await page.route(/\/api\/translate\?/, (route) =>
+      route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'not-configured' }) })
+    );
+    await page.goto('/apod/2026-09-11');
+
+    await expect(page.getByText(today.explanation.slice(0, 60)).first()).toBeAttached();
+    await expect(page.getByText('Texto original de la NASA, en inglés.').first()).toBeAttached();
+    await expect(page.getByRole('button', { name: 'Ver original' })).toHaveCount(0);
+  });
+});

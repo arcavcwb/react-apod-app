@@ -22,7 +22,7 @@ interface Envelope<T> {
   value: T;
 }
 
-function readCache<T>(key: string): T | null {
+export function readCache<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(CACHE_PREFIX + key);
     if (!raw) return null;
@@ -33,7 +33,7 @@ function readCache<T>(key: string): T | null {
   }
 }
 
-function writeCache<T>(key: string, value: T, ttl: number | null): void {
+export function writeCache<T>(key: string, value: T, ttl: number | null): void {
   try {
     const envelope: Envelope<T> = { expires: ttl === null ? null : Date.now() + ttl, value };
     localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(envelope));

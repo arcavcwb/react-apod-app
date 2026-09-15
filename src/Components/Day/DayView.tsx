@@ -4,6 +4,7 @@ import { BiBookOpen, BiChevronLeft, BiChevronRight, BiLinkExternal, BiPlay, BiRi
 import { ApodItem } from '../../contracts/apod.contract';
 import { useApodDay, useApodMonth } from '../../Hooks/useApod';
 import { useDocumentTitle } from '../../Hooks/useDocumentTitle';
+import { useExplanation } from '../../Hooks/useExplanation';
 import { useMediaQuery } from '../../Hooks/useMediaQuery';
 import { useI18n } from '../../i18n/I18n';
 import { ApodErrorKind, peekDay, thumbnailOf } from '../../services/nasa.service';
@@ -16,6 +17,7 @@ import { Notice } from '../Notice/Notice';
 import { PhotoFrame, usePhotoRatio } from '../Photo/PhotoFrame';
 import { ShareButton } from '../Share/ShareButton';
 import { DateJump } from './DateJump';
+import { ExplanationText } from './ExplanationText';
 
 type Reading = 'closed' | 'open' | 'closing';
 
@@ -339,7 +341,7 @@ const Explanation: React.FC<{
   const close = useRef<HTMLButtonElement>(null);
   const [overflows, setOverflows] = useState(false);
   const [from, setFrom] = useState(0);
-  const note = t('day.originalLanguage');
+  const explanation = useExplanation(item);
 
   // Only a desktop box has a fixed height; on phones the text never overflows and no button shows.
   useLayoutEffect(() => {
@@ -352,7 +354,7 @@ const Explanation: React.FC<{
     const ro = new ResizeObserver(measure);
     ro.observe(box);
     return () => ro.disconnect();
-  }, [item.explanation]);
+  }, [explanation.text, explanation.status]);
 
   const finish = useCallback(() => onReading('closed'), [onReading]);
 
@@ -402,14 +404,7 @@ const Explanation: React.FC<{
     onReading('open');
   };
 
-  const text = (
-    <>
-      <p lang="en" className="max-w-[66ch] leading-[1.75] text-fg">
-        {item.explanation}
-      </p>
-      {note && <p className="mt-4 text-small text-faint">{note}</p>}
-    </>
-  );
+  const text = <ExplanationText explanation={explanation} />;
 
   return (
     <>

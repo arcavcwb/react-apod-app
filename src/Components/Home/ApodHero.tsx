@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BiRightArrowAlt } from 'react-icons/bi';
 import { ApodItem } from '../../contracts/apod.contract';
 import { useDocumentTitle } from '../../Hooks/useDocumentTitle';
+import { useExplanation } from '../../Hooks/useExplanation';
 import { useMediaQuery } from '../../Hooks/useMediaQuery';
 import { useI18n } from '../../i18n/I18n';
 import { ApodResult } from '../../services/nasa.service';
@@ -93,11 +94,7 @@ const Caption: React.FC<{ item: ApodItem; part?: 'all' | 'title' | 'body' }> = (
   return (
     <>
       {part === 'all' && title}
-      {item.explanation && (
-        <p lang="en" className={`stage-excerpt line-clamp-2 text-muted lg:mt-5 lg:line-clamp-3 ${part === 'all' ? 'mt-3' : ''}`}>
-          {item.explanation}
-        </p>
-      )}
+      {item.explanation && <Excerpt item={item} className={`stage-excerpt lg:mt-5 ${part === 'all' ? 'mt-3' : ''}`} />}
       {/* Phones: circles with a short caption; wider screens: pills. */}
       <div className="mt-5 flex items-start gap-6 sm:mt-4 sm:gap-3 lg:mt-8">
         <Link
@@ -122,6 +119,24 @@ const Caption: React.FC<{ item: ApodItem; part?: 'all' | 'title' | 'body' }> = (
         />
       </div>
     </>
+  );
+};
+
+/** A few lines of the explanation, in the reader's language when a translation is at hand. */
+const Excerpt: React.FC<{ item: ApodItem; className: string }> = ({ item, className }) => {
+  const explanation = useExplanation(item);
+  if (explanation.status === 'waiting') {
+    return (
+      <div aria-hidden="true" className={`space-y-2.5 pt-1 ${className}`}>
+        <div className="skeleton h-4 w-full rounded-full" />
+        <div className="skeleton h-4 w-4/5 rounded-full" />
+      </div>
+    );
+  }
+  return (
+    <p lang={explanation.lang} className={`line-clamp-2 text-muted lg:line-clamp-3 ${className}`}>
+      {explanation.text}
+    </p>
   );
 };
 
