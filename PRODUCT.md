@@ -15,7 +15,15 @@ Two audiences, confirmed as equal priority:
 
 ## Product Purpose
 
-A reader for NASA's Astronomy Picture of the Day (APOD): today's picture, any day since 1995-06-16, and a month-by-month archive, with share links for every day. Success means the picture is on screen fast, never cropped or faked, and every day or month has a URL someone can send.
+A simple reader for NASA's Astronomy Picture of the Day (APOD). In priority order (user brief, 2026-09-11):
+
+1. Show today's picture clearly.
+2. Explore earlier pictures through a gallery.
+3. Share a picture easily.
+4. Feel designed for phones first.
+5. Make exploring the universe feel visually special.
+
+The core flow is TODAY → EXPLORE → SHARE, with as little friction as possible. It is not a dashboard: no metrics, sidebars or controls that do not serve those three steps. Success means the picture is on screen fast, never faked, and every day has a URL someone can send.
 
 ## Positioning
 
@@ -26,15 +34,18 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 - Data comes from `https://api.nasa.gov/planetary/apod` with `VITE_NASA_API_KEY` (falls back to `DEMO_KEY`, which NASA rate-limits per IP: 30 requests per hour, 50 per day).
 - Media is hosted by NASA (`apod.nasa.gov`) or embedded from YouTube/Vimeo for video days. Some days are `media_type` values other than `image`/`video`.
 - APOD's official site is moving from `apod.nasa.gov` to `science.nasa.gov/apod` (stated in the 2026-09-11 caption).
-- Deployed on Netlify (`https://reactapod.netlify.app/`), with CSP headers in `netlify.toml`.
+- Deployed on Netlify at `https://apodgallery.netlify.app` (project `apodgallery`, with its own `VITE_NASA_API_KEY`), CSP headers in `netlify.toml`. `https://reactapod.netlify.app` is an older, separate site.
+- NASA answers a month-long range in 5 to 40 seconds but a week in about 2, so months are fetched as parallel weeks. DEMO_KEY was measured at 10 requests per hour on 2026-09-11.
 
 ## Capabilities and Constraints
 
-- Routes: home (today), a day view by date, a month archive, an about page.
+- Routes: home `/` (today's picture plus a preview of recent days), a day detail view `/apod/YYYY-MM-DD`, a month gallery `/gallery/YYYY-MM` (old `/archive/*` links redirect), an about page reached from the footer.
+- Navigation offers only Today and Gallery, plus the language switch (user brief, 2026-09-11).
 - NASA titles, captions and credits arrive in English and are shown untranslated, marked `lang="en"`.
 - Images vary in aspect ratio (portrait, panorama, square). They must never be cropped in the day view.
 - `copyright` is absent for public-domain images; credit is never invented.
-- The home keeps the Three.js orbital scene as a secondary, lazy-loaded element below today's picture (user decision, 2026-09-11). It must not delay the picture.
+- No heavy Three.js scene for decoration; space atmosphere must stay light and never compete with the photograph (user brief, 2026-09-11, superseding the earlier decision to keep the 3D orrery below the home picture).
+- Share is a first-class action: Web Share API where available, otherwise copy link (with visible confirmation) and the existing network links.
 - Undecided: whether to proxy the API through Netlify to hide the key.
 
 ## Brand Commitments
@@ -42,6 +53,7 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 - Name: "NASA APOD Explorer". Independent project, not affiliated with NASA; the NASA insignia is not used as the app's logo.
 - UI copy in Spanish, English and Brazilian Portuguese (user decision, 2026-09-11).
 - No emoji in the interface; icons are SVG (project rule in `AGENTS.md`).
+- Binding visual constraints from the user brief (2026-09-11): deep navy or near-black ground (for example #020617, #030712, #0B1120), softened white text, slate secondary text, and a single spatial accent (orbital blue, deep violet or soft cyan). Mood: NASA, deep-space observatory, editorial photography, modern space exploration; cinematic, minimal, premium. Explicitly unwanted: dashboards, sidebars, decorative metrics or charts, large glassmorphism panels, too many cards, rainbow gradients, cyberpunk, neon, decorative tech grids, fake HUD, spaceship interfaces, many small labels, constant animation, unnecessary text.
 
 ## Evidence on Hand
 
@@ -51,10 +63,10 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 
 ## Product Principles
 
-1. The picture is the product: shown first, whole, and real.
+1. The picture is the product: shown first, whole, and real. The interface is a frame around the universe, never a set of components competing with it.
 2. Every claim on screen is true. No decorative status text, no substitute images passed off as the requested day.
 3. Every day and month is addressable, shareable and back-button friendly.
-4. Decorative and heavy features load after the picture and never block it.
+4. Simple to use, spectacular to look at: few controls, generous space, motion that supports rather than distracts.
 5. The interface speaks the visitor's language; NASA's words stay NASA's.
 
 ## Accessibility & Inclusion
