@@ -28,6 +28,10 @@ const es = {
   'day.otherBody': 'Este día no es una imagen ni un video. Ábrelo en la página oficial.',
   'day.explanation': 'Explicación',
   'day.originalLanguage': 'Texto original de la NASA, en inglés.',
+  'translate.auto': 'Traducción automática del texto de la NASA.',
+  'translate.showOriginal': 'Ver original',
+  'translate.showTranslation': 'Ver traducción',
+  'translate.loading': 'Traduciendo…',
   'day.loading': 'Consultando a la NASA…',
   'day.more': 'Seguir explorando',
 
@@ -151,6 +155,10 @@ const en: Messages = {
   'day.otherBody': 'This day is neither an image nor a video. Open it on the official page.',
   'day.explanation': 'Explanation',
   'day.originalLanguage': '',
+  'translate.auto': "Automatic translation of NASA's text.",
+  'translate.showOriginal': 'Show original',
+  'translate.showTranslation': 'Show translation',
+  'translate.loading': 'Translating…',
   'day.loading': 'Asking NASA…',
   'day.more': 'Keep exploring',
 
@@ -271,6 +279,10 @@ const ptBR: Messages = {
   'day.otherBody': 'Este dia não é uma imagem nem um vídeo. Abra na página oficial.',
   'day.explanation': 'Explicação',
   'day.originalLanguage': 'Texto original da NASA, em inglês.',
+  'translate.auto': 'Tradução automática do texto da NASA.',
+  'translate.showOriginal': 'Ver original',
+  'translate.showTranslation': 'Ver tradução',
+  'translate.loading': 'Traduzindo…',
   'day.loading': 'Consultando a NASA…',
   'day.more': 'Continue explorando',
 
