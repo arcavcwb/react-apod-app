@@ -3,6 +3,7 @@ import {
   fetchApodByDate,
   fetchApodMonth,
   fetchLatestApod,
+  fetchRecentApods,
   peekDay,
   purgeLegacyCache,
   thumbnailOf,
@@ -144,6 +145,21 @@ describe('nasa.service', () => {
     expect(fetchMock.mock.calls.length).toBe(calls);
     await fetchApodMonth('2026-09');
     expect(fetchMock.mock.calls.length).toBe(calls + 2);
+  });
+
+  it('fetches the latest days in one request, newest first, and fills the day cache', async () => {
+    const fetchMock = respond(200, [item('2026-09-09'), item('2026-09-11'), item('2026-09-10')]);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await fetchRecentApods();
+    expect(res.data?.map((d) => d.date)).toEqual(['2026-09-11', '2026-09-10', '2026-09-09']);
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(url.searchParams.get('start_date')).toBe('2026-09-03');
+    expect(url.searchParams.has('end_date')).toBe(false);
+    expect(peekDay('2026-09-10')?.title).toBe('Picture 2026-09-10');
+
+    await fetchRecentApods();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('purges caches written by earlier versions', () => {

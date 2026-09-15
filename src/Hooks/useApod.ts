@@ -5,9 +5,11 @@ import {
   fetchApodByDate,
   fetchApodMonth,
   fetchLatestApod,
+  fetchRecentApods,
   peekDay,
   peekLatest,
   peekMonth,
+  peekRecent,
 } from '../services/nasa.service';
 
 /** `null` while loading. Cached data is returned on the first render, with no loading frame. */
@@ -60,11 +62,20 @@ export function useApodMonth(month: string) {
   return { result, partial, retry };
 }
 
-/** Warms the month cache when the browser is idle, so day-to-day travel costs no requests. */
+/** The latest published days, newest first. */
+export function useRecentApods() {
+  return useResource<ApodItem[]>('recent', peekRecent, fetchRecentApods);
+}
+
+/**
+ * Warms the month cache when the browser is idle, so day-to-day travel costs no requests.
+ * Re-renders once the month lands, so callers can read neighbouring days from the cache.
+ */
 export function usePrefetchMonth(month: string | undefined) {
+  const [, setLanded] = useState(0);
   useEffect(() => {
     if (!month || peekMonth(month)) return;
-    const run = () => void fetchApodMonth(month);
+    const run = () => void fetchApodMonth(month).then((res) => res.data && setLanded((n) => n + 1));
     if ('requestIdleCallback' in window) {
       const id = window.requestIdleCallback(run, { timeout: 4000 });
       return () => window.cancelIdleCallback(id);
