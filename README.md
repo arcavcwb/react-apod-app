@@ -41,5 +41,6 @@ Without `VITE_NASA_API_KEY` the app uses NASA's `DEMO_KEY`, which is limited to 
 - `src/services/nasa.service.ts`: a month is fetched as parallel weekly ranges and reused for each of its days, and the home's recent days come from one short range; past days are cached in `localStorage` forever, today for an hour. Errors are reported as `rate-limit`, `not-found`, `network` or `contract`; the app never shows a substitute picture.
 - `src/utils/date.ts`: "today" is computed in US Eastern time, when NASA publishes.
 - `src/i18n/`: typed message dictionaries and `Intl` formatting, no i18n library.
+- `netlify/edge-functions/translate/`: `/api/translate?date=YYYY-MM-DD&lang=es|pt-BR` translates a day's explanation (never its title) with DeepL, from NASA's own text, and the CDN keeps the result. Set `DEEPL_API_KEY` in Netlify (available to Functions) and in `.env` for local development, where the Vite dev server runs the same code. Without it the app shows NASA's English.
 - `src/Components/Photo/Photo.tsx`: the day's media, never cropped; images develop from the cached thumbnail to the sharp CDN-resized file. Travelling between days uses the View Transitions API and respects `prefers-reduced-motion`.
 - Design context lives in `PRODUCT.md`, `DESIGN.md` and `.impeccable/`.

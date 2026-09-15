@@ -47,6 +47,8 @@ FLAGS (user steer 2026-09-15): languages carry round SVG flags (no emoji): Spain
 
 TITLE FIRST BELOW DESKTOP (user steer 2026-09-15): below 1024px, on the home and on a day, the NASA title comes first, above the photograph (a day's date then sits in the stepper under the photograph, the home's date stays under its title); desktop keeps the title in the words column.
 
+TRANSLATED EXPLANATIONS (user decision 2026-09-15): titles and credits stay in NASA's English; for Spanish and Portuguese readers the explanation (the day's text, the reading card and the home excerpt) is a DeepL translation, marked "Traducción automática del texto de la NASA." with "Ver original" beside it (and "Ver traducción" back). A first translation holds its place with skeleton lines for up to 2 seconds, then NASA's original shows with "Traduciendo…" until it arrives; any failure leaves the original with its usual note.
+
 ## Memorable moment
 
 Swiping through days and watching each photograph slide along the grid and develop into focus.

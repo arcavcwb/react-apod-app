@@ -32,6 +32,7 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 ## Operating Context
 
 - Data comes from `https://api.nasa.gov/planetary/apod` with `VITE_NASA_API_KEY` (falls back to `DEMO_KEY`, which NASA rate-limits per IP: 30 requests per hour, 50 per day).
+- Translations come from DeepL through the Edge Function at `/api/translate?date=&lang=`, with the server-only `DEEPL_API_KEY` (free-plan keys end in `:fx`). It takes a date and a language, never text, fetches the explanation from NASA itself, and the CDN keeps each translation until the next deploy. Without the key the app shows the original English.
 - Media is hosted by NASA (`apod.nasa.gov`) or embedded from YouTube/Vimeo for video days. Some days are `media_type` values other than `image`/`video`.
 - APOD's official site is moving from `apod.nasa.gov` to `science.nasa.gov/apod` (stated in the 2026-09-11 caption).
 - Deployed on Netlify at `https://apodgallery.netlify.app` (project `apodgallery`, with its own `VITE_NASA_API_KEY`), CSP headers in `netlify.toml`. `https://reactapod.netlify.app` is an older, separate site.
@@ -41,7 +42,7 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 
 - Routes: home `/` (today's picture plus a preview of recent days), a day detail view `/apod/YYYY-MM-DD`, a month gallery `/gallery/YYYY-MM` (old `/archive/*` links redirect), an about page reached from the footer.
 - Navigation offers only Today and Gallery, plus the language switch (user brief, 2026-09-11).
-- NASA titles, captions and credits arrive in English and are shown untranslated, marked `lang="en"`.
+- NASA titles and credits arrive in English and stay untranslated, marked `lang="en"`. Explanations are machine-translated into Spanish and Brazilian Portuguese with DeepL (user decision, 2026-09-15), always labelled as an automatic translation with NASA's original one tap away; English readers, and anyone when no translation can be had, read the original.
 - Images vary in aspect ratio (portrait, panorama, square). They must never be cropped in the day view.
 - `copyright` is absent for public-domain images; credit is never invented.
 - No heavy Three.js scene for decoration; space atmosphere must stay light and never compete with the photograph (user brief, 2026-09-11, superseding the earlier decision to keep the 3D orrery below the home picture).
@@ -67,7 +68,7 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 2. Every claim on screen is true. No decorative status text, no substitute images passed off as the requested day.
 3. Every day and month is addressable, shareable and back-button friendly.
 4. Simple to use, spectacular to look at: few controls, generous space, motion that supports rather than distracts.
-5. The interface speaks the visitor's language; NASA's words stay NASA's.
+5. The interface speaks the visitor's language. NASA's titles stay NASA's; its explanations may be translated, and then say so.
 
 ## Accessibility & Inclusion
 
