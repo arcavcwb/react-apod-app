@@ -1,89 +1,225 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { BiChevronDown } from 'react-icons/bi';
+import { BiCheck, BiGlobe, BiGridAlt, BiSun } from 'react-icons/bi';
 import { Mark } from '../Mark/Mark';
 import { useI18n } from '../../i18n/I18n';
 import { LOCALES, LOCALE_NAMES, Locale } from '../../i18n/messages';
 
+// Segmented controls: a sunken track, the current item raised out of it.
+const TRACK = 'flex items-center rounded-full bg-black/20 p-1 shadow-[inset_0_1px_3px_rgb(0_0_0/0.45),0_0_0_1px_rgb(232_236_242/0.08)]';
+const RAISED =
+  'bg-[linear-gradient(180deg,rgb(232_236_242/0.18),rgb(232_236_242/0.07))] text-fg shadow-[inset_0_1px_0_rgb(255_255_255/0.16),0_0_0_1px_rgb(232_236_242/0.13),0_4px_12px_-6px_rgb(0_0_0/0.8)]';
+
+// The current section is raised and underlined in aurora. 40px to see, 48px to touch (the pseudo-element widens the target).
 const navClass = ({ isActive }: { isActive: boolean }) =>
-  `notation relative flex min-h-12 items-center justify-center whitespace-nowrap px-1 transition-colors md:px-4 ${
+  `relative flex min-h-10 items-center gap-1.5 rounded-full px-3 transition-[color,background-color,box-shadow] duration-200 before:absolute before:-inset-1 before:rounded-full sm:px-3.5 lg:px-4 ${
     isActive
-      ? 'text-star after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-red md:after:inset-x-4'
-      : 'text-muted hover:text-star'
+      ? `${RAISED} after:absolute after:bottom-0.5 after:left-1/2 after:h-[3px] after:w-5 after:-translate-x-1/2 after:rounded-full after:bg-[linear-gradient(90deg,var(--accent),var(--nebula),var(--aurora))]`
+      : 'text-muted hover:text-fg'
   }`;
 
+// The current section's pill carries a transition name, so it slides from one item to the other.
+const navStyle = ({ isActive }: { isActive: boolean }) => (isActive ? { viewTransitionName: 'nav-pill' } : undefined);
+
+/** Phones: the header slides away while you scroll down a page and comes back as soon as you scroll up. */
+function useHideOnScroll() {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        if (Math.abs(y - last) < 8) return;
+        setHidden(y > last && y > 96);
+        last = y;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  return hidden;
+}
+
 export const Header: React.FC = () => {
-  const { t, locale, setLocale } = useI18n();
+  const { t } = useI18n();
+  const hidden = useHideOnScroll();
 
   return (
-    <header className="border-b border-line">
-      <div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between px-4 sm:px-6 lg:px-10">
-        <Link to="/" className="flex min-h-14 items-center gap-3 text-star" aria-label={`${t('brand.name')}, ${t('nav.today')}`}>
+    <header
+      className={`sticky top-0 z-30 shrink-0 px-3 pt-3 transition-transform duration-300 ease-out-expo focus-within:translate-y-0 sm:px-6 lg:relative lg:px-10 lg:pt-4 xl:px-14 ${
+        hidden ? '-translate-y-[calc(100%+0.75rem)]' : ''
+      }`}
+    >
+      {/* A pill floating over the sky, as wide as the page's content. */}
+      <div className="surface-float relative mx-auto flex h-[var(--header-h)] max-w-[83rem] items-center justify-between gap-2 rounded-full px-1 after:pointer-events-none after:absolute after:inset-x-[14%] after:-bottom-px after:h-px after:bg-[linear-gradient(90deg,transparent,rgb(65_108_230/0.65),rgb(124_92_240/0.65),rgb(55_198_232/0.55),transparent)] sm:px-1.5">
+        <Link to="/" className="flex min-h-12 items-center gap-3 rounded-full px-2.5 text-fg sm:px-3" aria-label={`${t('brand.name')}, ${t('nav.today')}`}>
           <Mark className="h-6 w-6" />
-          <span className="notation">{t('brand.name')}</span>
+          <span aria-hidden="true" className="hidden text-small font-semibold uppercase tracking-[0.16em] sm:inline">
+            {t('brand.name')}
+          </span>
         </Link>
 
-        <nav aria-label={t('nav.label')} className="order-last -mx-3 w-[calc(100%+1.5rem)] md:order-none md:mx-0 md:w-auto">
-          <ul className="grid grid-cols-3 md:flex">
-            <li>
-              <NavLink to="/" end className={navClass}>
-                {t('nav.today')}
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/archive" className={navClass}>
-                {t('nav.archive')}
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/about" className={navClass}>
-                {t('nav.about')}
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Wide screens show every language; phones get a native select with a short face. */}
-        <div role="group" aria-label={t('lang.label')} className="hidden md:flex">
-          {LOCALES.map((l) => (
-            <button
-              key={l}
-              type="button"
-              lang={l}
-              aria-pressed={locale === l}
-              title={LOCALE_NAMES[l].name}
-              onClick={() => setLocale(l)}
-              className={`notation relative min-h-12 min-w-12 px-2 transition-colors ${
-                locale === l
-                  ? 'text-star after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:bg-red'
-                  : 'text-muted hover:text-star'
-              }`}
-            >
-              <span aria-hidden="true">{LOCALE_NAMES[l].short}</span>
-              <span className="sr-only">{LOCALE_NAMES[l].name}</span>
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5 sm:gap-4">
+          <nav aria-label={t('nav.label')}>
+            <ul className={TRACK}>
+              <li>
+                <NavLink to="/" end viewTransition className={navClass} style={navStyle}>
+                  <BiSun aria-hidden="true" className="h-[1.125rem] w-[1.125rem] shrink-0" />
+                  {t('nav.today')}
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/gallery" viewTransition className={navClass} style={navStyle}>
+                  <BiGridAlt aria-hidden="true" className="h-[1.125rem] w-[1.125rem] shrink-0" />
+                  {t('nav.gallery')}
+                </NavLink>
+              </li>
+            </ul>
+          </nav>
+          <LanguageSwitch />
         </div>
-        {/* The native select stays on top (transparent) for keyboard, touch and screen readers. */}
-        <label className="relative flex min-h-12 min-w-12 items-center gap-1 pl-3 text-star focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-red md:hidden">
-          <span className="sr-only">{t('lang.label')}</span>
-          <span aria-hidden="true" className="notation">
-            {LOCALE_NAMES[locale].short}
-          </span>
-          <BiChevronDown aria-hidden="true" className="h-4 w-4 text-muted" />
-          <select
-            value={locale}
-            onChange={(e) => setLocale(e.target.value as Locale)}
-            className="absolute inset-0 cursor-pointer appearance-none opacity-0 focus-visible:outline-none"
-          >
-            {LOCALES.map((l) => (
-              <option key={l} value={l} lang={l}>
-                {LOCALE_NAMES[l].name}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
     </header>
+  );
+};
+
+const LanguageSwitch: React.FC = () => {
+  const { t, locale, setLocale } = useI18n();
+  return (
+    <>
+      {/* Wide screens show every language as a segmented control; phones open a menu. */}
+      <div role="group" aria-label={t('lang.label')} className={`hidden md:flex ${TRACK}`}>
+        {LOCALES.map((l) => (
+          <button
+            key={l}
+            type="button"
+            lang={l}
+            aria-pressed={locale === l}
+            title={LOCALE_NAMES[l].name}
+            onClick={() => setLocale(l)}
+            // 40px to see, 48px to touch: the pseudo-element widens the target.
+            className={`relative min-h-10 min-w-10 rounded-full px-2.5 text-small font-medium tracking-[0.08em] transition-[color,background-color,box-shadow] duration-200 before:absolute before:-inset-1 before:rounded-full ${
+              locale === l ? RAISED : 'text-faint hover:text-fg'
+            }`}
+          >
+            <span aria-hidden="true">{LOCALE_NAMES[l].short}</span>
+            <span className="sr-only">{LOCALE_NAMES[l].name}</span>
+          </button>
+        ))}
+      </div>
+      <LanguageMenu />
+    </>
+  );
+};
+
+/**
+ * Phones: a globe and the current language's code open a menu of the three languages, each named in
+ * itself, the current one badged in aurora and checked. Arrow keys move, Escape or a tap outside closes,
+ * and focus goes back to the button.
+ */
+const LanguageMenu: React.FC = () => {
+  const { t, locale, setLocale } = useI18n();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const options = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    options.current[LOCALES.indexOf(locale)]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        trigger.current?.focus();
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const at = options.current.indexOf(document.activeElement as HTMLButtonElement);
+        const step = e.key === 'ArrowDown' ? 1 : -1;
+        options.current[(at + step + LOCALES.length) % LOCALES.length]?.focus();
+      } else if (e.key === 'Tab') {
+        setOpen(false);
+      }
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [open, locale]);
+
+  const choose = (l: Locale) => {
+    setLocale(l);
+    setOpen(false);
+    trigger.current?.focus();
+  };
+
+  return (
+    <div ref={root} className="relative md:hidden">
+      <button
+        ref={trigger}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls="language-menu"
+        aria-label={`${t('lang.label')}: ${LOCALE_NAMES[locale].name}`}
+        onClick={() => setOpen((o) => !o)}
+        className={`btn btn-ghost min-h-12 gap-1.5 px-3 text-small font-semibold tracking-[0.08em] ${open ? 'text-fg' : ''}`}
+      >
+        <BiGlobe aria-hidden="true" className={`h-[1.125rem] w-[1.125rem] transition-colors ${open ? 'text-[var(--aurora)]' : 'text-muted'}`} />
+        <span aria-hidden="true">{LOCALE_NAMES[locale].short}</span>
+      </button>
+
+      {open && (
+        <div id="language-menu" className="lang-menu surface-float absolute right-0 top-full z-50 mt-3 w-64 rounded-2xl bg-panel p-1.5">
+          <p id="language-menu-title" className="px-3 pb-1 pt-2 text-small text-faint">
+            {t('lang.label')}
+          </p>
+          <div role="menu" aria-labelledby="language-menu-title">
+            {LOCALES.map((l, i) => {
+              const current = l === locale;
+              return (
+                <button
+                  key={l}
+                  ref={(el) => {
+                    options.current[i] = el;
+                  }}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={current}
+                  lang={l}
+                  onClick={() => choose(l)}
+                  className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-2.5 text-left transition-colors ${
+                    current ? 'bg-white/[0.07] text-fg' : 'text-muted hover:bg-white/[0.05] hover:text-fg focus-visible:text-fg'
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-8 w-10 shrink-0 items-center justify-center rounded-lg text-small font-semibold tracking-[0.06em] ${
+                      current
+                        ? 'bg-[linear-gradient(135deg,var(--accent),var(--nebula))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]'
+                        : 'bg-white/[0.06] text-muted'
+                    }`}
+                  >
+                    {LOCALE_NAMES[l].short}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{LOCALE_NAMES[l].name}</span>
+                  {current && <BiCheck aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--aurora)]" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };

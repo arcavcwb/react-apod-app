@@ -1,10 +1,10 @@
 import React from 'react';
-import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { Layout } from './Components/Layout/Layout';
 import { I18nProvider } from './i18n/I18n';
 import { About } from './Pages/About';
-import { Archive } from './Pages/Archive';
 import { Day, LegacyApodRedirect } from './Pages/Day';
+import { Gallery, LegacyArchiveRedirect } from './Pages/Gallery';
 import { Home } from './Pages/Home';
 import { NotFound } from './Pages/NotFound';
 
@@ -15,9 +15,10 @@ export const routes = [
       { path: '/', element: <Home /> },
       { path: '/apod', element: <LegacyApodRedirect /> },
       { path: '/apod/:date', element: <Day /> },
-      { path: '/archive', element: <Archive /> },
-      { path: '/archive/:month', element: <Archive /> },
-      { path: '/gallery', element: <Navigate to="/archive" replace /> },
+      { path: '/gallery', element: <Gallery /> },
+      { path: '/gallery/:month', element: <Gallery /> },
+      { path: '/archive', element: <LegacyArchiveRedirect /> },
+      { path: '/archive/:month', element: <LegacyArchiveRedirect /> },
       { path: '/about', element: <About /> },
       { path: '*', element: <NotFound /> },
     ],

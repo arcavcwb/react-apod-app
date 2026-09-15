@@ -3,15 +3,22 @@ import { BiCheck, BiEnvelope, BiLink, BiShareAlt } from 'react-icons/bi';
 import { SiLinkedin, SiTelegram, SiWhatsapp, SiX } from 'react-icons/si';
 import { useI18n } from '../../i18n/I18n';
 
-interface ShareMenuProps {
+interface ShareButtonProps {
   title: string;
   /** Localized date shown in the share text. */
   dateLabel: string;
   url: string;
+  /** The screen's one primary action gets the blue field. */
+  primary?: boolean;
+  className?: string;
+  /** Where the fallback menu opens, as position classes. */
+  menuClassName?: string;
+  /** Classes for the button itself, e.g. its galactic colour as a phone circle. */
+  buttonClassName?: string;
 }
 
-/** Native share sheet where it exists (phones); otherwise a small menu of plain share links. */
-export const ShareMenu: React.FC<ShareMenuProps> = ({ title, dateLabel, url }) => {
+/** Native share sheet where it exists (phones); otherwise copy link first, then plain share links. */
+export const ShareButton: React.FC<ShareButtonProps> = ({ title, dateLabel, url, primary = false, className = '', menuClassName = 'left-0 top-full mt-2', buttonClassName = '' }) => {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -39,6 +46,12 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({ title, dateLabel, url }) =
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!copied) return;
+    const id = setTimeout(() => setCopied(false), 2200);
+    return () => clearTimeout(id);
+  }, [copied]);
+
   const share = async () => {
     if (navigator.share) {
       try {
@@ -55,7 +68,6 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({ title, dateLabel, url }) =
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard blocked: the links below still work.
     }
@@ -70,28 +82,42 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({ title, dateLabel, url }) =
     { label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`, Icon: SiLinkedin },
     { label: t('share.email'), href: `mailto:?subject=${encodeURIComponent(title)}&body=${txt}%0A${u}`, Icon: BiEnvelope },
   ];
+  const row = 'flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-fg transition-colors hover:bg-white/[0.06]';
 
   return (
-    <div ref={rootRef} className="relative">
-      <button ref={buttonRef} type="button" className="control w-full" aria-expanded={open} onClick={share}>
-        <BiShareAlt aria-hidden="true" className="h-4 w-4" />
+    <div ref={rootRef} className={`relative ${className}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className={`btn btn-action w-full ${primary ? 'btn-primary' : 'btn-ghost'} ${buttonClassName}`}
+        aria-expanded={open}
+        onClick={share}
+      >
+        <span className="action-icon">
+          <BiShareAlt aria-hidden="true" className="h-5 w-5" />
+        </span>
         {t('day.share')}
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-2 w-64 border border-line-strong bg-ink-2 py-1 shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
-          <button type="button" data-first onClick={copy} className="notation flex min-h-12 w-full items-center gap-3 px-4 text-star hover:bg-ink">
-            {copied ? <BiCheck aria-hidden="true" className="h-4 w-4 text-red" /> : <BiLink aria-hidden="true" className="h-4 w-4 text-muted" />}
+        <div
+          role="group"
+          aria-label={t('share.menu')}
+          // On phones the fallback menu becomes a sheet along the bottom of the screen (.share-menu in index.css).
+          className={`share-menu surface-float absolute z-30 w-64 animate-[menu-in_200ms_cubic-bezier(0.16,1,0.3,1)] rounded-2xl bg-panel p-1.5 ${menuClassName}`}
+        >
+          <button type="button" data-first onClick={copy} className={row}>
+            {copied ? (
+              <BiCheck aria-hidden="true" className="h-5 w-5 animate-[menu-in_200ms_cubic-bezier(0.16,1,0.3,1)] text-accent" />
+            ) : (
+              <BiLink aria-hidden="true" className="h-5 w-5 text-muted" />
+            )}
             <span aria-live="polite">{copied ? t('share.copied') : t('share.copy')}</span>
           </button>
           {links.map(({ label, href, Icon }) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="notation flex min-h-12 items-center gap-3 px-4 text-star hover:bg-ink"
-            >
-              <Icon aria-hidden="true" className="h-4 w-4 text-muted" />
+            <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={row}>
+              <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center">
+                <Icon className="h-4 w-4 text-muted" />
+              </span>
               {label}
             </a>
           ))}

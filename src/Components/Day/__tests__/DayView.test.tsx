@@ -47,7 +47,8 @@ describe('Day page', () => {
     expect(screen.getByRole('link', { name: /Página oficial/ }).getAttribute('href')).toBe(
       'https://apod.nasa.gov/apod/ap260910.html'
     );
-    expect(screen.getByRole('slider', { name: /Días de septiembre de 2026/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Compartir' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Día siguiente/ }).getAttribute('href')).toBe('/apod/2026-09-11');
   });
 
   it('explains a rate limit and offers a retry instead of a substitute picture', async () => {

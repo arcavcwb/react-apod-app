@@ -11,24 +11,11 @@ const easternParts = new Intl.DateTimeFormat('en-CA', {
   year: 'numeric',
   month: '2-digit',
   day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
 });
 
-function eastern(now: Date) {
-  const p = Object.fromEntries(easternParts.formatToParts(now).map((x) => [x.type, x.value]));
-  return { date: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour), minute: Number(p.minute) };
-}
-
 export function apodToday(now = new Date()): string {
-  return eastern(now).date;
-}
-
-/** Whole hours until the next midnight in US Eastern time, rounded up. */
-export function hoursUntilNextApod(now = new Date()): number {
-  const { hour, minute } = eastern(now);
-  return Math.ceil((24 * 60 - (hour * 60 + minute)) / 60);
+  const p = Object.fromEntries(easternParts.formatToParts(now).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}`;
 }
 
 const toUtc = (date: string) => Date.parse(`${date}T00:00:00Z`);
@@ -79,18 +66,10 @@ export function monthRange(month: string, today = apodToday()): { start: string;
   return { start, end: last > today ? today : last };
 }
 
-/** Monday-first weekday index (0-6) of the first day of the month. */
-export function firstWeekday(month: string): number {
-  return (new Date(`${month}-01T00:00:00Z`).getUTCDay() + 6) % 7;
-}
-
 /** Official page for a day, e.g. https://apod.nasa.gov/apod/ap260911.html */
 export function officialApodUrl(date: string): string {
   return `https://apod.nasa.gov/apod/ap${date.slice(2).replace(/-/g, '')}.html`;
 }
-
-/** Plate code printed on the official site's URL, e.g. AP260911. */
-export const plateCode = (date: string) => `AP${date.slice(2).replace(/-/g, '')}`;
 
 /** Formats an APOD date without shifting it into the visitor's time zone. */
 export function formatApodDate(date: string, locale: string, options: Intl.DateTimeFormatOptions): string {

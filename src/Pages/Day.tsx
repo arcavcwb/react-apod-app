@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { DayView } from '../Components/Day/DayView';
-import { EmptyPlate } from '../Components/Plate/Plate';
+import { Notice } from '../Components/Notice/Notice';
 import { useDocumentTitle } from '../Hooks/useDocumentTitle';
 import { useI18n } from '../i18n/I18n';
 import { isValidApodDate } from '../utils/date';
@@ -13,19 +13,19 @@ export const Day: React.FC = () => {
 
   if (!isValidApodDate(date)) {
     return (
-      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
-        <EmptyPlate className="min-h-[60svh]" title={t('error.invalid.title')} body={t('error.invalid.body')}>
-          <Link to="/" className="control">
+      <div className="mx-auto max-w-[90rem] px-4 pt-10 sm:px-6 lg:px-10 lg:pt-16">
+        <Notice level={1} title={t('error.invalid.title')} body={t('error.invalid.body')}>
+          <Link to="/" className="btn btn-primary">
             {t('error.today')}
           </Link>
-          <Link to="/archive" className="control">
-            {t('nav.archive')}
+          <Link to="/gallery" className="btn btn-ghost">
+            {t('nav.gallery')}
           </Link>
-        </EmptyPlate>
+        </Notice>
       </div>
     );
   }
-  // Not keyed by date: the ruler and date field keep keyboard focus while the day changes.
+  // Not keyed by date: the date field and keyboard focus survive the change of day.
   return <DayView date={date} />;
 };
 
