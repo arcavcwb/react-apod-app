@@ -2,13 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   apodToday,
   dayNumber,
-  firstWeekday,
-  hoursUntilNextApod,
   isValidApodDate,
   isValidMonth,
   monthRange,
   officialApodUrl,
-  plateCode,
   randomApodDate,
   shiftDay,
   shiftMonth,
@@ -19,11 +16,6 @@ describe('APOD dates', () => {
     // 02:30 UTC on 12 Sep is still 22:30 on 11 Sep in New York (EDT).
     expect(apodToday(new Date('2026-09-12T02:30:00Z'))).toBe('2026-09-11');
     expect(apodToday(new Date('2026-09-12T04:30:00Z'))).toBe('2026-09-12');
-  });
-
-  it('counts hours until the next Eastern midnight', () => {
-    expect(hoursUntilNextApod(new Date('2026-09-12T02:30:00Z'))).toBe(2); // 22:30 EDT
-    expect(hoursUntilNextApod(new Date('2026-09-11T04:00:00Z'))).toBe(24); // 00:00 EDT
   });
 
   it('accepts only real dates inside the archive', () => {
@@ -56,18 +48,12 @@ describe('APOD dates', () => {
     expect(dayNumber('1995-06-17')).toBe(2);
   });
 
-  it('builds official page URLs and plate codes', () => {
+  it('builds official page URLs', () => {
     expect(officialApodUrl('2026-09-11')).toBe('https://apod.nasa.gov/apod/ap260911.html');
-    expect(plateCode('1999-02-19')).toBe('AP990219');
   });
 
   it('keeps random dates inside the archive', () => {
     expect(randomApodDate('2026-09-11', () => 0)).toBe('1995-06-16');
     expect(randomApodDate('2026-09-11', () => 0.999999)).toBe('2026-09-11');
-  });
-
-  it('finds the Monday-first weekday of the 1st', () => {
-    expect(firstWeekday('2026-09')).toBe(1); // 1 Sep 2026 is a Tuesday
-    expect(firstWeekday('2024-01')).toBe(0); // Monday
   });
 });

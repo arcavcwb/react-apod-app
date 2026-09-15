@@ -1,11 +1,14 @@
 import React from 'react';
-import { DayView } from '../Components/Day/DayView';
-import { OrrerySection } from '../Components/Orrery/OrrerySection';
+import { RecentDays } from '../Components/Gallery/RecentDays';
+import { ApodHero } from '../Components/Home/ApodHero';
+import { useApodDay } from '../Hooks/useApod';
 
-/** Today's plate first; the 3D orrery waits below and loads only when approached. */
-export const Home: React.FC = () => (
-  <>
-    <DayView />
-    <OrrerySection />
-  </>
-);
+/** TODAY and the step to EXPLORE (the days just before it), on one screen. */
+export const Home: React.FC = () => {
+  const { result, retry } = useApodDay(undefined);
+  return (
+    <ApodHero result={result} retry={retry}>
+      <RecentDays exclude={result?.data?.date} />
+    </ApodHero>
+  );
+};
