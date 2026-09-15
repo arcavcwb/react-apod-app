@@ -7,6 +7,7 @@ import { useMediaQuery } from '../../Hooks/useMediaQuery';
 import { useI18n } from '../../i18n/I18n';
 import { ApodResult } from '../../services/nasa.service';
 import { formatApodDate } from '../../utils/date';
+import { shareUrl } from '../../utils/shareUrl';
 import { Notice } from '../Notice/Notice';
 import { PhotoFrame } from '../Photo/PhotoFrame';
 import { ShareButton } from '../Share/ShareButton';
@@ -114,7 +115,7 @@ const Caption: React.FC<{ item: ApodItem; part?: 'all' | 'title' | 'body' }> = (
         <ShareButton
           buttonClassName="galaxy-share"
           title={item.title}
-          url={`${window.location.origin}/apod/${item.date}`}
+          url={shareUrl(`/apod/${item.date}`)}
           dateLabel={longDate}
           // Low on a phone's screen the menu opens upwards, aligned to the button's right edge.
           menuClassName="bottom-full right-0 mb-2 sm:left-0 sm:right-auto lg:bottom-auto lg:top-full lg:mb-0 lg:mt-2"

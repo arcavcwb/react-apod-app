@@ -10,6 +10,7 @@ import { ApodErrorKind, peekDay, thumbnailOf } from '../../services/nasa.service
 import { APOD_FIRST_DATE, apodToday, formatApodDate, monthOf, officialApodUrl, randomApodDate, shiftDay } from '../../utils/date';
 import { THUMB_WIDTH, optimizedImageUrl } from '../../utils/imageOptimizer';
 import { rememberRatio } from '../../utils/imageRatio';
+import { shareUrl } from '../../utils/shareUrl';
 import { Direction, markMorph, markTravel } from '../../utils/travel';
 import { Notice } from '../Notice/Notice';
 import { PhotoFrame, usePhotoRatio } from '../Photo/PhotoFrame';
@@ -207,7 +208,7 @@ const DayHeader: React.FC<{ item: ApodItem; compact: boolean; showTitle: boolean
           className={compact ? 'justify-self-center' : undefined}
           buttonClassName="galaxy-share"
           title={item.title}
-          url={`${window.location.origin}/apod/${item.date}`}
+          url={shareUrl(`/apod/${item.date}`)}
           dateLabel={longDate}
         />
         {item.hdurl && (
