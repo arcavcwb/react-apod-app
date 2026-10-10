@@ -165,6 +165,38 @@ test.describe('translation', () => {
   });
 });
 
+test.describe('the picture full screen', () => {
+  test('opens from a day, keeps the arrow keys to itself and gives focus back on Escape', async ({ page }) => {
+    await serveNasa(page);
+    await page.goto(`/apod/${TODAY}`);
+
+    const open = page.getByRole('button', { name: 'Ver la imagen a pantalla completa' });
+    await open.click();
+    const viewer = page.getByRole('dialog', { name: today.title });
+    await expect(viewer.getByRole('img', { name: today.title })).toBeVisible();
+    await expect(viewer.getByText(today.copyright)).toBeVisible();
+
+    // The day's arrow keys wait while the picture is open.
+    await page.keyboard.press('ArrowLeft');
+    await expect(page).toHaveURL(new RegExp(`/apod/${TODAY}$`));
+
+    await page.keyboard.press('Escape');
+    await expect(viewer).toHaveCount(0);
+    await expect(open).toBeFocused();
+  });
+
+  test('opens from today and closes with a click on the picture', async ({ page }) => {
+    await serveNasa(page);
+    await page.goto('/');
+
+    await page.getByRole('button', { name: 'Ver la imagen a pantalla completa' }).click();
+    const viewer = page.getByRole('dialog', { name: today.title });
+    await viewer.getByRole('img', { name: today.title }).click();
+    await expect(viewer).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 1, name: today.title })).toBeVisible();
+  });
+});
+
 // The desktop layout on a low screen: what a 1366x768 or a 1280x720 laptop leaves to the page.
 test.describe('laptop screens', () => {
   const bottom = async (part: Locator) => {

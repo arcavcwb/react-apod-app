@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { BiX } from 'react-icons/bi';
 import { ApodItem } from '../../contracts/apod.contract';
 import { useI18n } from '../../i18n/I18n';
 import { thumbnailOf } from '../../services/nasa.service';
@@ -18,6 +19,8 @@ interface PhotoFrameProps {
   transitionName?: string;
   /** Placed beside the card, outside the picture (the day arrows); the space keeps gutters for it. */
   sides?: React.ReactNode;
+  /** false where the picture is already alone on the screen. */
+  zoom?: boolean;
 }
 
 /**
@@ -52,14 +55,25 @@ export function usePhotoRatio(item: ApodItem | null): number | null {
  * The photograph itself is the floating card: the card takes the picture's own shape, as large as the
  * space allows and centred in it, with rounded corners, a soft shadow and a glow of its own colours
  * behind. Until the shape is known (a first visit, a page with no still) the card fills the space and
- * the picture sits whole inside it. Fills its parent's box, which must have a size.
+ * the picture sits whole inside it. Fills its parent's box, which must have a size. A click on a picture
+ * opens it full screen.
  */
-export const PhotoFrame: React.FC<PhotoFrameProps> = ({ item, sizes, bloom = true, className = '', transitionName = 'photo', sides }) => {
+export const PhotoFrame: React.FC<PhotoFrameProps> = ({
+  item,
+  sizes,
+  bloom = true,
+  className = '',
+  transitionName = 'photo',
+  sides,
+  zoom = true,
+}) => {
   const { t } = useI18n();
   const ratio = usePhotoRatio(item);
   const thumb = item ? thumbnailOf(item) : null;
   const glow = thumb ? optimizedImageUrl(thumb, 48) : null;
   const [lit, setLit] = useState(false);
+  // The picture opened full screen belongs to its day: another day arrives with it closed.
+  const [zoomed, setZoomed] = useState<string | null>(null);
 
   return (
     // A size container, so the card can fit its shape with container units; with sides, gutters hold them.
@@ -85,7 +99,11 @@ export const PhotoFrame: React.FC<PhotoFrameProps> = ({ item, sizes, bloom = tru
           />
         )}
         <div className="relative h-full w-full overflow-hidden rounded-[1.25rem] bg-panel shadow-photo after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-inset after:ring-white/[0.08] lg:rounded-[1.75rem]">
-          {item === null ? <div className="skeleton absolute inset-0" /> : <Photo item={item} sizes={sizes} position="object-center" />}
+          {item === null ? (
+            <div className="skeleton absolute inset-0" />
+          ) : (
+            <Photo item={item} sizes={sizes} position="object-center" onZoom={zoom ? () => setZoomed(item.date) : undefined} />
+          )}
           {item?.copyright && (
             <p className="absolute bottom-2.5 left-2.5 z-10 max-w-[calc(100%-1.25rem)] truncate rounded-full bg-[rgb(3_7_18/0.72)] px-3 py-1 text-small text-fg lg:bottom-4 lg:left-4">
               {t('day.credit')}: <span lang="en">{item.copyright}</span>
@@ -94,6 +112,43 @@ export const PhotoFrame: React.FC<PhotoFrameProps> = ({ item, sizes, bloom = tru
         </div>
         {sides}
       </div>
+      {item && zoomed === item.date && <PhotoViewer item={item} onClose={() => setZoomed(null)} />}
     </div>
+  );
+};
+
+/**
+ * The photograph alone on the screen: the same card, as large as the screen allows, over the page, which
+ * the viewer darkens (.viewer in index.css). A native modal dialog, so Escape closes it, focus stays
+ * inside and returns to the picture afterwards. Any click closes it too.
+ */
+const PhotoViewer: React.FC<{ item: ApodItem; onClose: () => void }> = ({ item, onClose }) => {
+  const { t } = useI18n();
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  // Opened once and never closed from a cleanup: StrictMode runs effects twice, and that close would end the viewer as it opens.
+  useEffect(() => {
+    const el = dialog.current;
+    if (el && !el.open) el.showModal();
+  }, []);
+
+  return (
+    <dialog
+      ref={dialog}
+      aria-label={item.title}
+      onClose={onClose}
+      onClick={() => dialog.current?.close()}
+      className="viewer fixed inset-0 m-0 h-full max-h-none w-full max-w-none cursor-zoom-out overflow-hidden p-3 sm:p-6"
+    >
+      <PhotoFrame item={item} sizes="100vw" transitionName="none" zoom={false} />
+      <button
+        type="button"
+        className="btn btn-ghost btn-icon absolute right-3 top-3 sm:right-6 sm:top-6"
+        aria-label={t('image.close')}
+        title={t('image.close')}
+      >
+        <BiX aria-hidden="true" className="h-5 w-5" />
+      </button>
+    </dialog>
   );
 };

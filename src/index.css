@@ -635,6 +635,16 @@
   }
 }
 
+/* The photograph alone on the screen: the viewer covers the page, all but a trace of it, and the page stays where it was. */
+.viewer {
+  background: var(--space);
+  background: color-mix(in srgb, var(--space) 97%, transparent);
+  animation: develop 400ms ease-out both;
+}
+html:has(.viewer[open]) {
+  overflow: hidden;
+}
+
 /* Today's photograph rises into place once; its light blooms in after it. */
 .float-in {
   animation: float-in 1000ms cubic-bezier(0.16, 1, 0.3, 1) both;

@@ -38,6 +38,8 @@ const es = {
   'image.loading': 'Revelando la imagen…',
   'image.error': 'La imagen no cargó.',
   'image.retry': 'Reintentar',
+  'image.zoom': 'Ver la imagen a pantalla completa',
+  'image.close': 'Cerrar la imagen',
 
   'error.rate-limit.title': 'La NASA pidió una pausa',
   'error.rate-limit.body': 'Hay demasiadas consultas en este momento. Prueba de nuevo en unos minutos o abre la página oficial.',
@@ -164,6 +166,8 @@ const en: Messages = {
   'image.loading': 'Developing the picture…',
   'image.error': 'The image did not load.',
   'image.retry': 'Try again',
+  'image.zoom': 'View the picture full screen',
+  'image.close': 'Close the picture',
 
   'error.rate-limit.title': 'NASA asked for a pause',
   'error.rate-limit.body': 'Too many requests right now. Try again in a few minutes or open the official page.',
@@ -287,6 +291,8 @@ const ptBR: Messages = {
   'image.loading': 'Revelando a imagem…',
   'image.error': 'A imagem não carregou.',
   'image.retry': 'Tentar de novo',
+  'image.zoom': 'Ver a imagem em tela cheia',
+  'image.close': 'Fechar a imagem',
 
   'error.rate-limit.title': 'A NASA pediu uma pausa',
   'error.rate-limit.body': 'Há consultas demais neste momento. Tente de novo em alguns minutos ou abra a página oficial.',
