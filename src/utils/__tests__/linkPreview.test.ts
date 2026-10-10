@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import apodPreview from '../../../netlify/edge-functions/apod-preview/apod-preview';
 import { excerpt, injectPreview, previewFor } from '../../../netlify/edge-functions/apod-preview/preview';
 
 const ORIGIN = 'https://apodgallery.netlify.app';
@@ -58,5 +59,28 @@ describe('link previews for shared days', () => {
     expect(cut.endsWith('…')).toBe(true);
     expect(cut.length).toBeLessThanOrEqual(51);
     expect(cut).not.toMatch(/\s…$/);
+  });
+});
+
+describe('the edge function for /apod/YYYY-MM-DD', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  /** The page as the function answers it when NASA answers `day`. */
+  async function served(day: unknown): Promise<string> {
+    vi.stubGlobal('Netlify', { env: { get: () => undefined } });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(day))));
+    const response = await apodPreview(new Request(`${ORIGIN}/apod/2026-09-07`), {
+      next: async () => new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8' } }),
+    });
+    return response.text();
+  }
+
+  it("writes the day's preview into the page", async () => {
+    expect(await served(pelican)).toContain('<meta property="og:title" content="The Pelican Nebula in Gas, Dust, and Stars" />');
+  });
+
+  it("leaves the page untouched when NASA answers with its placeholder record", async () => {
+    const logo = 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png';
+    expect(await served({ ...pelican, title: 'NASA Science', url: logo, hdurl: logo })).toBe(PAGE);
   });
 });

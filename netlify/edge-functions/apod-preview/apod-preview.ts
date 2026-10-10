@@ -3,6 +3,7 @@
 // running scripts. For /apod/YYYY-MM-DD this asks NASA for the day, server-side with the site's own key,
 // and writes its title, a few lines and its picture into the page. Anything unexpected leaves the page
 // untouched.
+import { ApodItemSchema } from '../../../src/contracts/apod.contract.ts';
 import { injectPreview, previewFor, type ApodDay } from './preview.ts';
 
 declare const Netlify: { env: { get(name: string): string | undefined } };
@@ -17,8 +18,9 @@ async function fetchDay(date: string): Promise<ApodDay | null> {
       signal: AbortSignal.timeout(4000),
     });
     if (!response.ok) return null;
-    const day = await response.json();
-    return typeof day?.title === 'string' && typeof day?.date === 'string' && typeof day?.media_type === 'string' ? day : null;
+    // The app's own contract: a day NASA answers with its placeholder record gets no preview of its own.
+    const day = ApodItemSchema.safeParse(await response.json());
+    return day.success ? day.data : null;
   } catch {
     return null;
   }

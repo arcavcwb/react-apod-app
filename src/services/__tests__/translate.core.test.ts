@@ -90,4 +90,16 @@ describe('translating an explanation', () => {
 
     expect([statusFor('bad-request'), statusFor('not-found'), statusFor('quota'), statusFor('upstream')]).toEqual([400, 404, 503, 502]);
   });
+
+  it("does not translate NASA's placeholder record", async () => {
+    const logo = 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png';
+    const fetch = fakeFetch(() => json({ ...day, title: 'NASA Science', url: logo, hdurl: logo }), () => translated('Otro texto.'));
+
+    expect(await translateExplanation('2026-09-07', 'es', { fetch, deeplKey: 'secret:fx', today: TODAY })).toEqual({
+      ok: false,
+      error: 'upstream',
+    });
+    // NASA was asked; DeepL never was.
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
 });

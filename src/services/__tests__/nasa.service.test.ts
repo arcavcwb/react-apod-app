@@ -162,12 +162,35 @@ describe('nasa.service', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('purges caches written by earlier versions', () => {
+  it("reports NASA's placeholder record as a contract violation and never caches it", async () => {
+    const logo = 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png';
+    const placeholder = (date: string) => item(date, { title: 'NASA Science', url: logo, hdurl: logo });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    vi.stubGlobal('fetch', respond(200, placeholder('2020-01-01')));
+    expect(await fetchApodByDate('2020-01-01')).toEqual({ data: null, error: 'contract' });
+    expect(peekDay('2020-01-01')).toBeNull();
+
+    vi.stubGlobal('fetch', respond(200, [placeholder('2026-09-10'), placeholder('2026-09-11')]));
+    expect(await fetchRecentApods()).toEqual({ data: null, error: 'contract' });
+    expect(peekDay('2026-09-10')).toBeNull();
+  });
+
+  it('purges caches written by earlier versions', async () => {
     localStorage.setItem('apod_cache_v2_item_today', '{}');
+    localStorage.setItem('apod:v3:day:2026-09-10', '{}');
+    localStorage.setItem('apod:v3:translation:es:2026-09-10', '{}');
     localStorage.setItem('apod:locale', 'es');
+    vi.stubGlobal('fetch', respond(200, item('2020-01-01')));
+    await fetchApodByDate('2020-01-01');
+
     purgeLegacyCache();
     expect(localStorage.getItem('apod_cache_v2_item_today')).toBeNull();
+    expect(localStorage.getItem('apod:v3:day:2026-09-10')).toBeNull();
+    expect(localStorage.getItem('apod:v3:translation:es:2026-09-10')).toBeNull();
     expect(localStorage.getItem('apod:locale')).toBe('es');
+    // What this version cached stays.
+    expect(peekDay('2020-01-01')?.title).toBe('Picture 2020-01-01');
   });
 
   it('derives thumbnails for videos', () => {

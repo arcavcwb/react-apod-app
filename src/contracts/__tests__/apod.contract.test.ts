@@ -37,4 +37,20 @@ describe('ApodItemSchema', () => {
   it('rejects items without a valid date', () => {
     expect(ApodItemSchema.safeParse({ ...base, date: '11/09/2026' }).success).toBe(false);
   });
+
+  it("rejects NASA's placeholder record, which has the shape of a day but is not one", () => {
+    // What api.nasa.gov answered for every date on 2026-10-09 (explanation shortened).
+    const placeholder = {
+      date: '2026-10-08',
+      explanation: 'Stickney Crater, the largest crater on the martian moon Phobos, is named for Chloe Angeline Stickney Hall…',
+      hdurl: 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png',
+      media_type: 'image',
+      service_version: 'v1',
+      title: 'NASA Science',
+      url: 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png',
+    };
+    expect(ApodItemSchema.safeParse(placeholder).success).toBe(false);
+    // A real picture hosted on the new site is still a day.
+    expect(ApodItemSchema.safeParse({ ...base, url: 'https://science.nasa.gov/wp-content/uploads/2026/10/m83.jpg' }).success).toBe(true);
+  });
 });

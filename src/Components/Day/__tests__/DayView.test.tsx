@@ -65,6 +65,17 @@ describe('Day page', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'The Heart Nebula' })).toBeTruthy();
   });
 
+  it("explains NASA's placeholder record instead of showing its logo as the day", async () => {
+    const logo = 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ ...picture, title: 'NASA Science', url: logo, hdurl: logo }))));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderDay('/apod/2026-09-10');
+
+    expect(await screen.findByRole('heading', { name: 'Respuesta inesperada' })).toBeTruthy();
+    expect(screen.queryByRole('img')).toBeNull();
+    expect(screen.queryByText('NASA Science')).toBeNull();
+  });
+
   it('rejects dates outside the archive without calling NASA', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
