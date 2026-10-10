@@ -1,35 +1,32 @@
-# Task Checklist - TASK-022: La app cabe en la pantalla de un laptop
+# Task Checklist - TASK-023: La imagen se abre a pantalla completa
 
-- [x] **Fase 1: Diagnóstico (reporte del usuario, 2026-10-09: «la responsividad en mi laptop no se ve bien»)**
-  - [x] El diseño de escritorio pone el día y «Acerca de» en una sola pantalla, pero solo cabía con unos 720 px de alto. Un laptop de 1366x768 o de 1280x720 deja entre 600 y 650.
-  - [x] Día: el texto, «Leer todo» y la tira del mes quedaban sobre el pie o cortados.
-  - [x] «Acerca de»: bloques cortados a media línea, sin forma de leer el resto.
-  - [x] Galería: miniaturas de unos 50 px de alto, como franjas.
+- [x] **Fase 1: Decisión (usuario, 2026-10-09)**
+  - [x] La imagen del día se abre en un modal. Hasta ahora un clic en ella no hacía nada, y «Alta resolución» abre el archivo en otra pestaña.
+  - [x] En un laptop la fotografía del día mide entre 230 y 280 px de alto (TASK-022): el modal le devuelve el tamaño.
 
 - [x] **Fase 2: Implementación**
-  - [x] Día: el título, las acciones y el texto forman una columna propia; un título largo ya no empuja la tira y las acciones hacia el pie.
-  - [x] Variante `short:` de Tailwind (escritorio de hasta 768 px de alto): menos aire entre bloques.
-  - [x] El tamaño de los títulos (`text-display`) también depende del alto de la pantalla.
-  - [x] Galería: una fila de imágenes por página cuando la pantalla tiene hasta 736 px de alto.
-  - [x] «Acerca de»: dos bloques por página en pantallas bajas, en lugar de tres.
-  - [x] Por debajo de 576 px de alto las páginas de una pantalla pasan a leerse hacia abajo (antes, 480); la fotografía del día se queda a la vista junto al texto.
+  - [x] Un clic en la imagen (o Enter) la abre entera sobre la página oscurecida; una marca en la esquina lo indica donde no hay puntero.
+  - [x] `<dialog>` nativo: cierra con Escape, con el botón y con otro clic; el foco queda dentro y vuelve a la imagen.
+  - [x] En la página del día y en la portada. Los vídeos conservan su reproductor.
+  - [x] Mientras está abierta, las flechas del teclado y el deslizamiento no cambian de día, y la página no se desplaza.
+  - [x] Textos en español, inglés y portugués.
 
 - [x] **Fase 3: Verificación**
   - [x] `tsc`, tests unitarios, E2E y build.
-  - [x] Seis pruebas E2E nuevas a 1366x650 y 1280x600 (día, galería y «Acerca de»); las seis fallan sin el arreglo.
-  - [x] En navegador, con datos reales: seis días distintos (apaisado, vertical, vídeo, títulos de dos y tres líneas) en siete tamaños de pantalla, sin nada sobre el pie.
-  - [x] Teléfono y escritorio grande: sin cambios a la vista.
-  - [ ] En el laptop del usuario: no se conoce su resolución; lo medido es Chromium a los tamaños habituales.
+  - [x] Dos pruebas E2E nuevas, en teléfono y escritorio.
+  - [x] En navegador, con datos reales: imagen apaisada y vertical, a 1366x650 y 390x844.
+  - [ ] En un teléfono real: el gesto de atrás y el zoom con dos dedos no se probaron.
 
 - [x] **Gobernanza Operativa Git Flow (CRÍTICO):**
   - [x] NUNCA comitear directamente a `main`.
-  - [x] Trabajar en rama (`feat/TASK-022-laptop-heights`).
+  - [x] Trabajar en rama (`feat/TASK-023-photo-viewer`, sobre la de TASK-022).
   - [x] `git add` y `git commit` (Conventional Commits, commits atómicos).
-  - [x] `git push -u origin feat/TASK-022-laptop-heights`.
+  - [x] `git push -u origin feat/TASK-023-photo-viewer`.
   - [x] Crear Pull Request con `gh pr create`.
-  - [x] Reporte técnico en `docs/walkthroughs/TASK-022-laptop-heights.md`.
+  - [x] Reporte técnico en `docs/walkthroughs/TASK-023-photo-viewer.md`.
 
 - [ ] **Pendiente de tareas anteriores**
+  - [ ] TASK-022: PR #22 abierto, sin mergear; falta verlo en el laptop del usuario.
   - [x] TASK-021: producción comprobada tras el merge (2026-10-10): `/api/apod`, `/api/translate`, la vista previa de un día, la portada y la galería.
   - [ ] TASK-018: revisión final de diseño y `DESIGN.md` nuevo (`pnpm check:design` falla por eso: Public Sans no está declarada).
   - [ ] TASK-018: vistas previas al compartir por WhatsApp con un día real.
