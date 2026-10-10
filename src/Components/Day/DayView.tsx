@@ -24,7 +24,7 @@ type Reading = 'closed' | 'open' | 'closing';
 const smooth = (): ScrollBehavior =>
   typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase() + s.slice(1);
-const SHELL = 'mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 flex-col px-4 pt-4 sm:px-6 lg:px-10 lg:pb-2 lg:pt-6 xl:px-14';
+const SHELL = 'mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 flex-col px-4 pt-4 sm:px-6 lg:px-10 lg:pb-2 lg:pt-6 short:pt-4 xl:px-14';
 
 /**
  * One day. Desktop, on one screen and without scrollbars: title, date, actions and the explanation in
@@ -132,16 +132,28 @@ export const DayView: React.FC<{ date: string }> = ({ date }) => {
     );
   }
 
+  // Covered by the reading card while it is open, so keyboard focus cannot wander behind it.
+  const header = (
+    <div {...(reading !== 'closed' ? ({ inert: '' } as Record<string, string>) : {})}>
+      {item ? (
+        <DayHeader item={item} compact={compact} showTitle={wide} onRandom={() => travel(randomApodDate(today))} />
+      ) : (
+        wide && <HeaderSkeleton />
+      )}
+    </div>
+  );
+  const explanation = item?.explanation ? <Explanation item={item} reading={reading} onReading={onReading} className="lg:flex-1" /> : null;
+
   return (
     <article
-      className={`${SHELL} gap-6 lg:relative lg:grid lg:grid-cols-12 lg:grid-rows-[auto_minmax(0,1fr)_auto_auto] lg:gap-x-12 lg:gap-y-5 xl:gap-x-16`}
+      className={`${SHELL} gap-6 lg:grid lg:grid-cols-12 lg:grid-rows-[minmax(0,1fr)_auto_auto] lg:gap-x-12 lg:gap-y-5 short:gap-y-3 xl:gap-x-16`}
     >
       {/* Below desktop the title comes first, above the photograph. */}
       {!wide && (item ? <DayTitle item={item} className="-mb-2" /> : <TitleSkeleton className="-mb-2" />)}
 
       <div
         {...swipe}
-        className="relative aspect-[var(--ratio)] max-h-[62svh] w-full [touch-action:pan-y_pinch-zoom] lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1 lg:aspect-auto lg:max-h-none lg:min-h-0"
+        className="day-photo relative aspect-[var(--ratio)] max-h-[62svh] w-full [touch-action:pan-y_pinch-zoom] lg:col-span-7 lg:col-start-6 lg:row-start-1 lg:aspect-auto lg:max-h-none lg:min-h-0"
         style={{ '--ratio': ratio ?? 1 } as React.CSSProperties}
       >
         <PhotoFrame
@@ -153,36 +165,28 @@ export const DayView: React.FC<{ date: string }> = ({ date }) => {
       </div>
       {!wide && arrows}
 
-      {/* Covered by the reading card while it is open, so keyboard focus cannot wander behind it. */}
-      <div className="lg:col-span-5 lg:col-start-1 lg:row-start-1" {...(reading !== 'closed' ? ({ inert: '' } as Record<string, string>) : {})}>
-        {item ? (
-          <DayHeader item={item} compact={compact} showTitle={wide} onRandom={() => travel(randomApodDate(today))} />
-        ) : (
-          wide && <HeaderSkeleton />
-        )}
-      </div>
+      {/* Desktop: the words are a column of their own, so a long title takes room from the text under it and never from the photograph's column. */}
+      {wide ? (
+        <div className="relative col-span-5 col-start-1 row-span-3 row-start-1 flex min-h-0 flex-col gap-5 short:gap-3">
+          {header}
+          {explanation}
+        </div>
+      ) : (
+        header
+      )}
 
       {item && (
         <>
-          <DayStrip date={date} morphTo={morphTo} onMorph={setMorphTo} className="min-w-0 lg:col-span-7 lg:col-start-6 lg:row-start-4" />
-          {item.explanation && (
-            <Explanation
-              item={item}
-              reading={reading}
-              onReading={onReading}
-              className="lg:col-span-5 lg:col-start-1 lg:row-span-3 lg:row-start-2"
-              cardClassName="lg:col-span-5 lg:col-start-1 lg:row-span-4 lg:row-start-1"
-            />
-          )}
+          <DayStrip date={date} morphTo={morphTo} onMorph={setMorphTo} className="min-w-0 lg:col-span-7 lg:col-start-6 lg:row-start-3" />
+          {!wide && explanation}
           <Onward
             item={item}
             actions={!compact}
             onRandom={() => travel(randomApodDate(today))}
-            className="lg:col-span-7 lg:col-start-6 lg:row-start-3"
+            className="lg:col-span-7 lg:col-start-6 lg:row-start-2"
           />
         </>
       )}
-
     </article>
   );
 };
@@ -202,7 +206,7 @@ const DayHeader: React.FC<{ item: ApodItem; compact: boolean; showTitle: boolean
       {/* Phones: all four actions together, as galactic circles. Wider screens: Share and HD as pills here, the rest by the carousel. */}
       <div
         className={`${compact ? 'grid grid-flow-col auto-cols-fr items-start gap-2' : 'flex flex-wrap items-start gap-3'} ${
-          showTitle ? 'mt-4 lg:mt-6' : ''
+          showTitle ? 'mt-4 lg:mt-6 short:mt-4' : ''
         }`}
       >
         <ShareButton
@@ -331,9 +335,7 @@ const Explanation: React.FC<{
   reading: Reading;
   onReading: (reading: Reading) => void;
   className?: string;
-  /** Grid placement of the card: the left column, every row. */
-  cardClassName?: string;
-}> = ({ item, reading, onReading, className = '', cardClassName = '' }) => {
+}> = ({ item, reading, onReading, className = '' }) => {
   const { t } = useI18n();
   const section = useRef<HTMLElement>(null);
   const clip = useRef<HTMLDivElement>(null);
@@ -394,13 +396,10 @@ const Explanation: React.FC<{
   }, [reading, onReading]);
 
   const open = () => {
-    // The card grows from the top of the text, measured against the top of the grid.
+    // The card grows from the top of the text, measured against the top of the column it covers.
     const box = section.current;
-    const grid = box?.parentElement;
-    if (box && grid) {
-      const top = grid.getBoundingClientRect().top + parseFloat(getComputedStyle(grid).paddingTop);
-      setFrom(Math.max(0, box.getBoundingClientRect().top - top));
-    }
+    const column = box?.parentElement;
+    if (box && column) setFrom(Math.max(0, box.getBoundingClientRect().top - column.getBoundingClientRect().top));
     onReading('open');
   };
 
@@ -452,7 +451,7 @@ const Explanation: React.FC<{
           }}
           className={`surface-float absolute inset-0 z-20 hidden flex-col rounded-[2rem] bg-panel p-6 lg:flex xl:p-8 ${
             reading === 'closing' ? 'reading-out' : 'reading-in'
-          } ${cardClassName}`}
+          }`}
         >
           <div className="flex items-start justify-between gap-4">
             <h2 id="reading-title" lang="en" className="line-clamp-2 pt-3 font-semibold text-fg">

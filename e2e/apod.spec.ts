@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
-import { serveNasa, today } from './nasa';
+import { expect, test, type Locator } from '@playwright/test';
+import { TODAY, serveNasa, today } from './nasa';
 
 test.describe('today', () => {
   test('shows the picture of the day whole, with its title, credit and actions', async ({ page }) => {
@@ -163,4 +163,68 @@ test.describe('translation', () => {
     await expect(page.getByText('Texto original de la NASA, en inglés.').first()).toBeAttached();
     await expect(page.getByRole('button', { name: 'Ver original' })).toHaveCount(0);
   });
+});
+
+// The desktop layout on a low screen: what a 1366x768 or a 1280x720 laptop leaves to the page.
+test.describe('laptop screens', () => {
+  const bottom = async (part: Locator) => {
+    const box = await part.boundingBox();
+    return box ? box.y + box.height : Infinity;
+  };
+
+  for (const size of [
+    { width: 1366, height: 650 },
+    { width: 1280, height: 600 },
+  ]) {
+    const screen = `${size.width}x${size.height}`;
+
+    test(`a day with a long title fits ${screen}, with nothing over the footer`, async ({ page, isMobile }) => {
+      test.skip(isMobile, 'the desktop layout');
+      await page.setViewportSize(size);
+      await serveNasa(page);
+      // Three lines of title, the most the page shows.
+      const title = 'The Complete Sharpless Catalog: 313 Nebulas';
+      await page.route(/\/api\/apod\?date=/, (route) =>
+        route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...today, title }) })
+      );
+      await page.goto(`/apod/${TODAY}`);
+
+      await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
+      const strip = page.getByRole('region', { name: /septiembre de 2026/i });
+      await expect(strip.getByRole('link').first()).toBeVisible();
+      const more = page.getByRole('button', { name: 'Leer todo' });
+      await expect(more).toBeVisible();
+
+      const footer = (await page.getByRole('contentinfo').boundingBox())!;
+      expect(footer.y + footer.height).toBeLessThanOrEqual(size.height);
+      for (const part of [strip, more, page.getByRole('link', { name: /Página oficial/ }), page.getByRole('link', { name: /Alta resolución/ })]) {
+        expect(await bottom(part)).toBeLessThanOrEqual(footer.y);
+      }
+    });
+
+    test(`the gallery shows pictures, not strips, on ${screen}`, async ({ page, isMobile }) => {
+      test.skip(isMobile, 'the desktop layout');
+      await page.setViewportSize(size);
+      await serveNasa(page);
+      await page.goto(`/gallery/${TODAY.slice(0, 7)}`);
+
+      const picture = page.getByRole('link', { name: new RegExp(today.title) }).locator('img');
+      await expect(picture).toBeVisible();
+      const box = (await picture.boundingBox())!;
+      expect(box.height).toBeGreaterThan(box.width * 0.6);
+    });
+
+    test(`about keeps every block whole on ${screen}`, async ({ page, isMobile }) => {
+      test.skip(isMobile, 'the desktop layout');
+      await page.setViewportSize(size);
+      await page.goto('/about');
+
+      const pages = page.getByRole('region', { name: 'Acerca de' });
+      await expect(pages).toBeVisible();
+      const frame = (await pages.boundingBox())!;
+      for (const block of await pages.locator('section').all()) {
+        expect(await bottom(block)).toBeLessThanOrEqual(frame.y + frame.height);
+      }
+    });
+  }
 });
