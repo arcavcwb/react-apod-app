@@ -4,7 +4,7 @@ import { apodToday, monthOf, monthRange, shiftDay } from '../utils/date';
 const API_URL = 'https://api.nasa.gov/planetary/apod';
 const TIMEOUT_MS = 15_000;
 const HOUR_MS = 3_600_000;
-const CACHE_PREFIX = 'apod:v3:';
+const CACHE_PREFIX = 'apod:v4:';
 
 export type ApodErrorKind = 'rate-limit' | 'not-found' | 'network' | 'contract';
 export type ApodResult<T> = { data: T; error: null } | { data: null; error: ApodErrorKind };
@@ -42,11 +42,14 @@ export function writeCache<T>(key: string, value: T, ttl: number | null): void {
   }
 }
 
-/** Drops caches from earlier versions, which could hold substitute images stored as real days. */
+/**
+ * Drops caches from earlier versions, which could hold substitute images stored as real days: v3 kept
+ * NASA's placeholder record (see apod.contract.ts) forever, along with translations of its text.
+ */
 export function purgeLegacyCache(): void {
   try {
     Object.keys(localStorage)
-      .filter((k) => k.startsWith('apod_cache_'))
+      .filter((k) => k.startsWith('apod_cache_') || (/^apod:v\d+:/.test(k) && !k.startsWith(CACHE_PREFIX)))
       .forEach((k) => localStorage.removeItem(k));
     sessionStorage.removeItem('nasa_circuit_breaker_until');
   } catch {
