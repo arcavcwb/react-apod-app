@@ -414,14 +414,25 @@
     height: 100svh;
   }
 }
-/* Every other page: one screen on desktop, an ordinary scrolling page on phones. */
+/* Every other page: one screen on desktop, an ordinary scrolling page on phones and on a desktop screen too low to hold it. */
 .stage-lg {
   min-height: 100svh;
 }
-@media (min-width: 64rem) and (min-height: 30rem) {
+@media (min-width: 64rem) and (min-height: 36rem) {
   .stage-lg {
     height: 100vh;
     height: 100svh;
+  }
+}
+/* On that low screen the day reads down the page; its photograph keeps a screen's height and stays in view beside the text. */
+@media (min-width: 64rem) and (max-height: 35.99rem) {
+  .stage-lg .day-photo {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    height: calc(100vh - 7.5rem);
+    height: calc(100svh - 7.5rem);
+    min-height: 14rem;
   }
 }
 /* Scoped under .stage: Tailwind emits lg: variants last, and these must still win on short screens. */

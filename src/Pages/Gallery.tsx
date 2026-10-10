@@ -22,7 +22,9 @@ const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase() + s.slice(1);
 function useGridShape() {
   const xl = useMediaQuery('(min-width: 1280px)');
   const tall = useMediaQuery('(min-height: 62rem)');
-  return { cols: xl ? 6 : 5, rows: tall ? 3 : 2 };
+  // A laptop's low screen holds one row at a size worth looking at; two would flatten the pictures into strips.
+  const low = useMediaQuery('(max-height: 46rem)');
+  return { cols: xl ? 6 : 5, rows: tall ? 3 : low ? 1 : 2 };
 }
 
 export const Gallery: React.FC = () => {

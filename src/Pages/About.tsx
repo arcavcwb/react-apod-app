@@ -18,7 +18,7 @@ const Block: React.FC<{ title: string; children: React.ReactNode }> = ({ title, 
   </section>
 );
 
-/** Desktop, on one screen: three blocks abreast, the rest a turn away. Phones read down. */
+/** Desktop, on one screen: three blocks abreast (two on a low screen, where a third's lines would not fit), the rest a turn away. Phones read down. */
 export const About: React.FC = () => {
   const { t } = useI18n();
   useDocumentTitle(t('about.title'));
@@ -59,12 +59,12 @@ export const About: React.FC = () => {
   ];
 
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 flex-col px-4 pt-6 sm:px-6 lg:px-10 lg:pt-10 xl:px-14">
+    <div className="mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 flex-col px-4 pt-6 sm:px-6 lg:px-10 lg:pt-10 short:pt-5 xl:px-14">
       <h1 className="shrink-0 text-display font-light text-fg">{t('about.title')}</h1>
       {wide ? (
-        <Pager label={t('about.title')} className="mt-12 min-h-0 flex-1" trackClassName="-mx-10 xl:-mx-14">
+        <Pager label={t('about.title')} className="mt-12 min-h-0 flex-1 short:mt-6" trackClassName="-mx-10 xl:-mx-14">
           {blocks.map(({ title, body }) => (
-            <PagerPanel key={title} className="px-10 py-2 lg:w-1/3 xl:px-14">
+            <PagerPanel key={title} className="px-10 py-2 lg:w-1/3 short:w-1/2 xl:px-14">
               <Block title={title}>{body}</Block>
             </PagerPanel>
           ))}
