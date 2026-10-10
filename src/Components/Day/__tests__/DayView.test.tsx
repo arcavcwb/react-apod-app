@@ -4,6 +4,7 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { I18nProvider } from '../../../i18n/I18n';
 import { Locale } from '../../../i18n/messages';
 import { Day } from '../../../Pages/Day';
+import { fetchApodByDate } from '../../../services/nasa.service';
 
 const picture = {
   date: '2026-09-10',
@@ -74,6 +75,15 @@ describe('Day page', () => {
     expect(await screen.findByRole('heading', { name: 'Respuesta inesperada' })).toBeTruthy();
     expect(screen.queryByRole('img')).toBeNull();
     expect(screen.queryByText('NASA Science')).toBeNull();
+  });
+
+  it('names the tab after a day that was already cached', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(picture))));
+    await fetchApodByDate('2026-09-10');
+    renderDay('/apod/2026-09-10', 'en');
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'The Heart Nebula' })).toBeTruthy();
+    expect(document.title).toBe('The Heart Nebula · NASA APOD Explorer');
   });
 
   it('rejects dates outside the archive without calling NASA', async () => {
