@@ -5,6 +5,7 @@ import { useI18n } from '../../i18n/I18n';
 import { thumbnailOf } from '../../services/nasa.service';
 import { THUMB_WIDTH, optimizedImageUrl } from '../../utils/imageOptimizer';
 import { knownRatio, rememberRatio } from '../../utils/imageRatio';
+import { zoomTransition } from '../../utils/travel';
 import { Photo } from './Photo';
 
 interface PhotoFrameProps {
@@ -56,7 +57,7 @@ export function usePhotoRatio(item: ApodItem | null): number | null {
  * space allows and centred in it, with rounded corners, a soft shadow and a glow of its own colours
  * behind. Until the shape is known (a first visit, a page with no still) the card fills the space and
  * the picture sits whole inside it. Fills its parent's box, which must have a size. A click on a picture
- * opens it full screen.
+ * opens it full screen: the card grows from its place into the viewer, and back.
  */
 export const PhotoFrame: React.FC<PhotoFrameProps> = ({
   item,
@@ -74,14 +75,16 @@ export const PhotoFrame: React.FC<PhotoFrameProps> = ({
   const [lit, setLit] = useState(false);
   // The picture opened full screen belongs to its day: another day arrives with it closed.
   const [zoomed, setZoomed] = useState<string | null>(null);
+  const open = item !== null && zoomed === item.date;
 
   return (
     // A size container, so the card can fit its shape with container units; with sides, gutters hold them.
     <div className={`grid h-full w-full place-items-center [container-type:size] ${sides ? 'px-[3.75rem]' : ''}`}>
       <div
-        className={`float-in relative isolate transition-[width] duration-500 ease-out-expo ${className}`}
+        className={`photo-card float-in relative isolate transition-[width] duration-500 ease-out-expo ${className}`}
         style={{
-          viewTransitionName: transitionName,
+          // Open, the viewer's card carries the name: the photograph is one thing, here or there.
+          viewTransitionName: open ? 'none' : transitionName,
           width: ratio ? `min(100cqw, calc(100cqh * ${ratio}))` : '100cqw',
           height: ratio ? undefined : '100cqh',
           aspectRatio: ratio ? String(ratio) : undefined,
@@ -102,7 +105,7 @@ export const PhotoFrame: React.FC<PhotoFrameProps> = ({
           {item === null ? (
             <div className="skeleton absolute inset-0" />
           ) : (
-            <Photo item={item} sizes={sizes} position="object-center" onZoom={zoom ? () => setZoomed(item.date) : undefined} />
+            <Photo item={item} sizes={sizes} position="object-center" onZoom={zoom ? () => zoomTransition(() => setZoomed(item.date)) : undefined} />
           )}
           {item?.copyright && (
             <p className="absolute bottom-2.5 left-2.5 z-10 max-w-[calc(100%-1.25rem)] truncate rounded-full bg-[rgb(3_7_18/0.72)] px-3 py-1 text-small text-fg lg:bottom-4 lg:left-4">
@@ -112,7 +115,7 @@ export const PhotoFrame: React.FC<PhotoFrameProps> = ({
         </div>
         {sides}
       </div>
-      {item && zoomed === item.date && <PhotoViewer item={item} onClose={() => setZoomed(null)} />}
+      {open && <PhotoViewer item={item} onClose={() => setZoomed(null)} />}
     </div>
   );
 };
@@ -120,7 +123,7 @@ export const PhotoFrame: React.FC<PhotoFrameProps> = ({
 /**
  * The photograph alone on the screen: the same card, as large as the screen allows, over the page, which
  * the viewer darkens (.viewer in index.css). A native modal dialog, so Escape closes it, focus stays
- * inside and returns to the picture afterwards. Any click closes it too.
+ * inside and returns to the picture afterwards. Any click closes it too, and the card travels back.
  */
 const PhotoViewer: React.FC<{ item: ApodItem; onClose: () => void }> = ({ item, onClose }) => {
   const { t } = useI18n();
@@ -132,15 +135,27 @@ const PhotoViewer: React.FC<{ item: ApodItem; onClose: () => void }> = ({ item, 
     if (el && !el.open) el.showModal();
   }, []);
 
+  // Closed inside the transition, while the dialog is still there to give focus back.
+  const close = () =>
+    zoomTransition(() => {
+      dialog.current?.close();
+      onClose();
+    });
+
   return (
     <dialog
       ref={dialog}
       aria-label={item.title}
+      // Escape asks first (cancel), so the way back is ours; onClose stays for a close the browser makes alone.
+      onCancel={(e) => {
+        e.preventDefault();
+        close();
+      }}
       onClose={onClose}
-      onClick={() => dialog.current?.close()}
-      className="viewer fixed inset-0 m-0 h-full max-h-none w-full max-w-none cursor-zoom-out overflow-hidden p-3 sm:p-6"
+      onClick={close}
+      className="viewer fixed inset-0 m-0 h-full max-h-none w-full max-w-none cursor-pointer overflow-hidden p-3 sm:p-6"
     >
-      <PhotoFrame item={item} sizes="100vw" transitionName="none" zoom={false} />
+      <PhotoFrame item={item} sizes="100vw" zoom={false} />
       <button
         type="button"
         className="btn btn-ghost btn-icon absolute right-3 top-3 sm:right-6 sm:top-6"

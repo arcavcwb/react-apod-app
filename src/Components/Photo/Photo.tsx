@@ -10,6 +10,9 @@ const VIDEO_FILE = /\.(mp4|webm|mov)(\?|$)/i;
 /** NASA hosts some video days as plain files, which have no still to show in a grid. */
 export const isVideoFile = (url: string) => VIDEO_FILE.test(url);
 const EMBED_HOSTS = /^https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com|player\.vimeo\.com)\//i;
+// The copy of each picture already loaded this visit, by NASA's URL: where the picture appears again
+// (the viewer opens on it) that copy stands in, sharp, while the size that place asks for arrives.
+const loaded = new Map<string, string>();
 
 interface PhotoProps {
   item: ApodItem;
@@ -58,7 +61,7 @@ export const Photo: React.FC<PhotoProps> = ({ item, sizes, position, onZoom }) =
 
 /**
  * The small archive thumbnail (usually already cached) sits blurred in place while the
- * full image downloads, then the sharp image develops over it.
+ * full image downloads, then the sharp image develops over it. A picture seen before starts sharp.
  */
 const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; position: string; onZoom?: () => void }> = ({
   src,
@@ -71,6 +74,7 @@ const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; posit
   const [status, setStatus] = useState<'loading' | 'developing' | 'done' | 'error'>('loading');
   const [raw, setRaw] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [seen] = useState(() => loaded.get(src));
 
   const handleError = () => {
     // If the resizing CDN fails, try NASA's original once before giving up.
@@ -106,10 +110,10 @@ const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; posit
     <>
       {status !== 'done' && (
         <img
-          src={optimizedImageUrl(src, THUMB_WIDTH)}
+          src={seen ?? optimizedImageUrl(src, THUMB_WIDTH)}
           alt=""
           aria-hidden="true"
-          className={`absolute inset-0 h-full w-full object-contain opacity-60 blur-xl ${position}`}
+          className={`absolute inset-0 h-full w-full object-contain ${position} ${seen ? '' : 'opacity-60 blur-xl'}`}
         />
       )}
       {status === 'loading' && (
@@ -130,6 +134,7 @@ const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; posit
         {...({ fetchpriority: 'high' } as Record<string, string>)}
         onLoad={(e) => {
           rememberRatio(src, e.currentTarget);
+          loaded.set(src, e.currentTarget.currentSrc);
           setStatus('developing');
         }}
         onAnimationEnd={() => setStatus('done')}
@@ -144,7 +149,7 @@ const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; posit
           type="button"
           onClick={onZoom}
           aria-label={t('image.zoom')}
-          className="group absolute inset-0 cursor-zoom-in rounded-[inherit] focus-visible:outline-offset-[-4px]"
+          className="group absolute inset-0 rounded-[inherit] focus-visible:outline-offset-[-4px]"
         >
           <span
             aria-hidden="true"

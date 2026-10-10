@@ -639,7 +639,10 @@
 .viewer {
   background: var(--space);
   background: color-mix(in srgb, var(--space) 97%, transparent);
-  animation: develop 400ms ease-out both;
+}
+/* Its card arrives by growing out of the page's (a view transition), so it does not float in as well. */
+.viewer .float-in {
+  animation: none;
 }
 html:has(.viewer[open]) {
   overflow: hidden;
@@ -742,13 +745,18 @@ html:has(.viewer[open]) {
   animation-duration: 600ms;
   animation-timing-function: var(--travel-ease);
 }
-/* A tile growing into a photograph brings another day's words: they fade through, never across. */
+/* A tile growing into a photograph brings another day's words: they fade through, never across. The day
+   arrows leave and return the same way around the viewer. */
 :root[data-morph]::view-transition-old(day-title),
-:root[data-morph]::view-transition-old(day-text) {
+:root[data-morph]::view-transition-old(day-text),
+:root[data-zoom]::view-transition-old(day-prev),
+:root[data-zoom]::view-transition-old(day-next) {
   animation: 200ms cubic-bezier(0.4, 0, 1, 1) both vt-fade-out;
 }
 :root[data-morph]::view-transition-new(day-title),
-:root[data-morph]::view-transition-new(day-text) {
+:root[data-morph]::view-transition-new(day-text),
+:root[data-zoom]::view-transition-new(day-prev),
+:root[data-zoom]::view-transition-new(day-next) {
   animation: 320ms cubic-bezier(0, 0, 0.2, 1) 160ms both vt-fade-in;
 }
 /* The day arrows keep to the card's edges while the photographs trade places. */
@@ -772,6 +780,17 @@ html:has(.viewer[open]) {
 ::view-transition-new(photo) {
   height: 100%;
   object-fit: cover;
+}
+/* Opening the viewer, or closing it, moves the photograph alone: the rest of the page is one picture that
+   fades. The day arrows hang on the card, so they keep their names to stay out of its picture, and give
+   them up under the viewer: they fade where they are. */
+:root[data-zoom] :not(.photo-card, .photo-card *),
+:root:has(.viewer[open]) .photo-card * {
+  view-transition-name: none !important;
+}
+/* The photograph travels over everything, its own arrows included. */
+:root[data-zoom]::view-transition-group(photo) {
+  z-index: 1;
 }
 /* While a home tile morphs into its day, the hero gives up the shared name (a duplicate would cancel the transition). */
 :root[data-morph] .hero-photo {
