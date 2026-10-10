@@ -195,6 +195,22 @@ test.describe('the picture full screen', () => {
     await expect(viewer).toHaveCount(0);
     await expect(page.getByRole('heading', { level: 1, name: today.title })).toBeVisible();
   });
+
+  test('grows from its place into the viewer: the photograph moves and the page fades as one', async ({ page }) => {
+    await serveNasa(page);
+    await page.goto(`/apod/${TODAY}`);
+
+    await page.getByRole('button', { name: 'Ver la imagen a pantalla completa' }).click();
+    const running = await page.waitForFunction(() => {
+      const parts = document.getAnimations().map((a) => (a.effect as KeyframeEffect).pseudoElement ?? '');
+      return parts.some((part) => part.startsWith('::view-transition')) ? parts : null;
+    });
+    const parts = (await running.jsonValue()) ?? [];
+    // Old and new under one name is a move; the day's words have no part of their own in it.
+    expect(parts).toContain('::view-transition-old(photo)');
+    expect(parts).toContain('::view-transition-new(photo)');
+    expect(parts.filter((part) => /day-title|day-text/.test(part))).toEqual([]);
+  });
 });
 
 // The desktop layout on a low screen: what a 1366x768 or a 1280x720 laptop leaves to the page.
