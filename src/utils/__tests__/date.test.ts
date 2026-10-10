@@ -55,7 +55,7 @@ describe('APOD dates', () => {
   });
 
   it('builds official page URLs', () => {
-    expect(officialApodUrl('2026-09-11')).toBe('https://apod.nasa.gov/apod/ap260911.html');
+    expect(officialApodUrl('2026-09-11')).toBe('https://science.nasa.gov/apod/?date=260911');
   });
 
   it('keeps random dates inside the archive', () => {

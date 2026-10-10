@@ -46,7 +46,7 @@ describe('Day page', () => {
     expect(screen.getByText('Someone Real')).toBeTruthy();
     expect(screen.getByRole('link', { name: /Alta resolución/ }).getAttribute('href')).toBe(picture.hdurl);
     expect(screen.getByRole('link', { name: /Página oficial/ }).getAttribute('href')).toBe(
-      'https://apod.nasa.gov/apod/ap260910.html'
+      'https://science.nasa.gov/apod/?date=260910'
     );
     expect(screen.getByRole('button', { name: 'Compartir' })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Día siguiente/ }).getAttribute('href')).toBe('/apod/2026-09-11');
