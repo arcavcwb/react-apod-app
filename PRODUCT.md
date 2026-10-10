@@ -31,13 +31,12 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 
 ## Operating Context
 
-- Data comes from `https://api.nasa.gov/planetary/apod` with `VITE_NASA_API_KEY` (falls back to `DEMO_KEY`, which NASA rate-limits per IP: 30 requests per hour, 50 per day).
+- Data comes from APOD's official site: the Edge Function at `/api/apod` reads `https://science.nasa.gov/wp-json/wp/v2/image-article` (the site's WordPress, category `apod`) and answers the days in the shape the app always used. No key is needed (user decision, 2026-10-09). The day's title, explanation, media and credit are read from the page's own markup, so a redesign of NASA's site can break the reader: the recorded days in `src/services/__tests__/fixtures/` are the reference.
 - Translations come from DeepL through the Edge Function at `/api/translate?date=&lang=`, with the server-only `DEEPL_API_KEY` (free-plan keys end in `:fx`). It takes a date and a language, never text, fetches the explanation from NASA itself, and the CDN keeps each translation until the next deploy. Without the key the app shows the original English.
-- Media is hosted by NASA (`apod.nasa.gov`) or embedded from YouTube/Vimeo for video days. Some days are `media_type` values other than `image`/`video`.
-- APOD's official site is moving from `apod.nasa.gov` to `science.nasa.gov/apod` (stated in the 2026-09-11 caption).
-- Measured on 2026-10-09: every `apod.nasa.gov/apod/*.html` page redirects to `science.nasa.gov/apod/`, and the API answers any date with a placeholder record (title "NASA Science", the website's logo as the picture, an explanation that is not the day's), answers 500 without a date, and at times takes 30 seconds or answers 503. The contract rejects that record, so the app reports a `contract` error instead of showing or caching it. Undecided: where the data comes from if NASA does not repair the API.
-- Deployed on Netlify at `https://apodgallery.netlify.app` (project `apodgallery`, with its own `VITE_NASA_API_KEY`), CSP headers in `netlify.toml`. `https://reactapod.netlify.app` is an older, separate site.
-- NASA answers a month-long range in 5 to 40 seconds but a week in about 2, so months are fetched as parallel weeks. DEMO_KEY was measured at 10 requests per hour on 2026-09-11.
+- Media is hosted by NASA (`assets.science.nasa.gov`: pictures and video files) or embedded from YouTube/Vimeo. Interactive days have no media and no explanation (`media_type: other`).
+- APOD's official site moved from `apod.nasa.gov` to `science.nasa.gov/apod`; a day's page is `science.nasa.gov/apod/?date=YYMMDD`. Measured on 2026-10-09: every `apod.nasa.gov/apod/*.html` page redirects to the new home, and NASA's old API (`api.nasa.gov/planetary/apod`) answers any date with a placeholder record (title "NASA Science", the website's logo as the picture). The app no longer uses that API, and the contract still rejects such a record wherever it comes from.
+- Deployed on Netlify at `https://apodgallery.netlify.app` (project `apodgallery`; its `VITE_NASA_API_KEY` variable is no longer read), CSP headers in `netlify.toml`. `https://reactapod.netlify.app` is an older, separate site.
+- NASA's site answers a month in 3 to 5 seconds and a week in about 1 (measured 2026-10-09); months are fetched as parallel weeks and the CDN keeps each answer.
 
 ## Capabilities and Constraints
 
@@ -45,10 +44,9 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 - Navigation offers only Today and Gallery, plus the language switch (user brief, 2026-09-11).
 - NASA titles and credits arrive in English and stay untranslated, marked `lang="en"`. Explanations are machine-translated into Spanish and Brazilian Portuguese with DeepL (user decision, 2026-09-15), always labelled as an automatic translation with NASA's original one tap away; English readers, and anyone when no translation can be had, read the original.
 - Images vary in aspect ratio (portrait, panorama, square). They must never be cropped in the day view.
-- `copyright` is absent for public-domain images; credit is never invented.
+- The credit is what APOD's page gives in its credit row, for copyrighted and public-domain pictures alike; it is absent when the page has none and never invented.
 - No heavy Three.js scene for decoration; space atmosphere must stay light and never compete with the photograph (user brief, 2026-09-11, superseding the earlier decision to keep the 3D orrery below the home picture).
 - Share is a first-class action: Web Share API where available, otherwise copy link (with visible confirmation) and the existing network links.
-- Undecided: whether to proxy the API through Netlify to hide the key.
 
 ## Brand Commitments
 
@@ -59,7 +57,7 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 
 ## Evidence on Hand
 
-- Live APOD data for any date via the API; no bundled image catalog.
+- Live APOD data for any date from the official site; no bundled image catalog.
 - Technical case study in `docs/posts/de-84-segundos-a-120-fps-modernizacion-nasa-apod.md`.
 - No testimonials, usage metrics or press. Do not fabricate them, and do not invent telemetry or system status.
 

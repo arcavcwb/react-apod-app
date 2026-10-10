@@ -1,35 +1,32 @@
-# Task Checklist - TASK-020: Registro de relleno de la NASA
+# Task Checklist - TASK-021: Los días se leen del sitio oficial de APOD
 
-- [x] **Fase 1: Diagnóstico (2026-10-09)**
-  - [x] La API de la NASA responde a cualquier fecha con el mismo registro: título «NASA Science», el logo del sitio como imagen y una explicación que no es la del día; sin fecha responde 500.
-  - [x] `apod.nasa.gov/apod/*.html` redirige a `science.nasa.gov/apod/`.
-  - [x] La app lo aceptaba (la forma es válida) y lo guardaba: `localStorage` para siempre, traducciones un año en la CDN.
+- [x] **Fase 1: Decisión (usuario, 2026-10-09)**
+  - [x] La API de la NASA (`api.nasa.gov/planetary/apod`) sigue devolviendo el registro de relleno; no se espera a que la reparen.
+  - [x] La app lee los días del sitio oficial, `science.nasa.gov`, que los publica como JSON en su WordPress (`/wp-json/wp/v2/image-article`, categoría `apod`).
 
 - [x] **Fase 2: Implementación**
-  - [x] Contrato: un registro cuya imagen es un archivo del tema del sitio no es un día (`src/contracts/apod.contract.ts`).
-  - [x] Caché `apod:v4:` y purga de `apod:v3:` al arrancar (`src/services/nasa.service.ts`).
-  - [x] La vista previa al compartir usa el mismo contrato (`netlify/edge-functions/apod-preview/apod-preview.ts`).
-  - [x] `/gallery/2025-13` y `/gallery/2025-00`: `isValidMonth` solo acepta meses 01 a 12.
-  - [x] El título de la pestaña de un día ya guardado (`src/Pages/Day.tsx`).
+  - [x] Contrato Zod de lo que envía el sitio (`ApodPostSchema`) y lector de un día (`netlify/edge-functions/apod/core.ts`): título, explicación, imagen, vídeo o reproductor, y crédito.
+  - [x] Edge Function `/api/apod` con los mismos parámetros que tenía la API (`date`, `start_date`, `end_date`, o nada para el último día) y caché de CDN; el servidor de desarrollo de Vite ejecuta el mismo código.
+  - [x] `nasa.service.ts` pide a `/api/apod`; ya no hay clave de la NASA en el navegador.
+  - [x] `/api/translate` y la vista previa al compartir leen de la misma fuente.
+  - [x] Enlaces oficiales a `science.nasa.gov/apod/`, textos de la interfaz, CSP (`connect-src 'self'`) y `.env.example`.
 
 - [ ] **Fase 3: Verificación**
-  - [x] `tsc`, tests unitarios (8 nuevos, los 8 fallan sin el arreglo), E2E y build.
-  - [x] En el navegador, con las respuestas de la NASA grabadas ese día: aviso «Respuesta inesperada», sin logo y sin nada en caché.
-  - [ ] Tras el merge: el deploy vacía la CDN (traducciones y vistas previas del registro de relleno); comprobar `/api/translate` y un `/apod/YYYY-MM-DD` en producción.
+  - [x] `tsc` (ahora también las Edge Functions), tests unitarios con siete días reales grabados, E2E y build.
+  - [x] 235 días grabados de nueve meses entre 1995 y 2026 se leen sin restos de HTML.
+  - [x] En local contra el sitio real: portada, día con imagen, archivo de vídeo, YouTube, día interactivo, GIF de 1995, galería y traducción con DeepL.
+  - [ ] Tras el merge, en producción: `/api/apod`, `/api/translate`, la vista previa de un día y la portada. Las Edge Functions no se pueden probar antes: los deploy previews piden inicio de sesión.
 
 - [x] **Gobernanza Operativa Git Flow (CRÍTICO):**
   - [x] NUNCA comitear directamente a `main`.
-  - [x] Trabajar en rama (`fix/TASK-020-nasa-placeholder`).
+  - [x] Trabajar en rama (`feat/TASK-021-official-source`).
   - [x] `git add` y `git commit` (Conventional Commits, commits atómicos).
-  - [x] `git push -u origin fix/TASK-020-nasa-placeholder`.
+  - [x] `git push -u origin feat/TASK-021-official-source`.
   - [x] Crear Pull Request con `gh pr create`.
-  - [x] Reporte técnico en `docs/walkthroughs/TASK-020-nasa-placeholder.md`.
-
-- [ ] **Decisión pendiente del usuario**
-  - [ ] De dónde salen los datos si la NASA no repara la API. Hasta entonces la app muestra sus avisos de error, no contenido.
+  - [x] Reporte técnico en `docs/walkthroughs/TASK-021-official-source.md`.
 
 - [ ] **Pendiente de tareas anteriores**
-  - [x] TASK-019: la traducción responde en producción con la clave de DeepL (comprobado el 2026-10-09).
+  - [x] TASK-020: producción comprobada tras el merge (2026-10-10): sin registro de relleno y con la CDN vacía.
   - [ ] TASK-018: revisión final de diseño y `DESIGN.md` nuevo (`pnpm check:design` falla por eso: Public Sans no está declarada).
-  - [ ] TASK-018: vistas previas al compartir por WhatsApp con un día real (hoy la NASA no entrega ninguno).
-  - [ ] TASK-018: Netlify, `VITE_NASA_API_KEY` disponible también para Functions.
+  - [ ] TASK-018: vistas previas al compartir por WhatsApp con un día real.
+  - [ ] En Netlify, la variable `VITE_NASA_API_KEY` ya no se usa y se puede borrar.
