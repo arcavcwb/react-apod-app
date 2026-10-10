@@ -1,5 +1,5 @@
 // /api/translate?date=YYYY-MM-DD&lang=es|pt-BR answers one day's APOD explanation in Spanish or Brazilian
-// Portuguese. The work is in core.ts, shared with the Vite dev server; this adds the keys and the CDN cache.
+// Portuguese. The work is in core.ts, shared with the Vite dev server; this adds the key and the CDN cache.
 import { apodToday } from '../../../src/utils/date.ts';
 import { statusFor, translateExplanation } from './core.ts';
 
@@ -11,7 +11,6 @@ export default async (request: Request) => {
   const query = new URL(request.url).searchParams;
   const result = await translateExplanation(query.get('date'), query.get('lang'), {
     deeplKey: Netlify.env.get('DEEPL_API_KEY'),
-    nasaKey: Netlify.env.get('VITE_NASA_API_KEY'),
   });
   if (!result.ok) {
     return Response.json({ error: result.error }, { status: statusFor(result.error), headers: { 'Cache-Control': 'no-store' } });

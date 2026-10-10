@@ -2,7 +2,6 @@
 // (local). Titles and credits are never translated. The caller names a date and a language, never text:
 // the explanation comes from NASA itself, so the DeepL key cannot be used to translate anything else.
 // Relative imports carry their extension, as Deno requires.
-import { ApodItemSchema } from '../../../src/contracts/apod.contract.ts';
 import {
   DeepLResponseSchema,
   TranslationLangSchema,
@@ -10,13 +9,13 @@ import {
   type TranslationLang,
 } from '../../../src/contracts/translation.contract.ts';
 import { apodToday, isValidApodDate } from '../../../src/utils/date.ts';
+import { apodDay } from '../apod/core.ts';
 
 export type TranslateError = 'bad-request' | 'not-configured' | 'not-found' | 'quota' | 'upstream';
 export type TranslateResult = { ok: true; translation: Translation } | { ok: false; error: TranslateError };
 
 export interface TranslateDeps {
   deeplKey?: string;
-  nasaKey?: string;
   /** For tests; defaults to today in US Eastern time. */
   today?: string;
   fetch?: (input: string, init?: RequestInit) => Promise<Response>;
@@ -50,21 +49,10 @@ export async function translateExplanation(
   if (!deeplKey) return { ok: false, error: 'not-configured' };
   const request = deps.fetch ?? fetch;
 
-  let explanation: string;
-  try {
-    const nasaKey = encodeURIComponent(deps.nasaKey?.trim() || 'DEMO_KEY');
-    const response = await request(`https://api.nasa.gov/planetary/apod?date=${day}&api_key=${nasaKey}`, {
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    // NASA answers 400 for dates outside the archive and 404 for days without a picture.
-    if (response.status === 400 || response.status === 404) return { ok: false, error: 'not-found' };
-    if (!response.ok) return { ok: false, error: 'upstream' };
-    const parsed = ApodItemSchema.safeParse(await response.json());
-    if (!parsed.success || parsed.data.date !== day) return { ok: false, error: 'upstream' };
-    explanation = parsed.data.explanation;
-  } catch {
-    return { ok: false, error: 'upstream' };
-  }
+  const apod = await apodDay(day, { fetch: request, today: deps.today, timeout: TIMEOUT_MS });
+  if (!apod.ok) return { ok: false, error: apod.error === 'not-found' ? 'not-found' : 'upstream' };
+  const { explanation } = apod.data;
+  // Interactive days have no explanation to translate.
   if (!explanation) return { ok: false, error: 'not-found' };
 
   try {

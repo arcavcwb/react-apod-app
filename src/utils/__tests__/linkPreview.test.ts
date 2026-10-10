@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import apodPreview from '../../../netlify/edge-functions/apod-preview/apod-preview';
 import { excerpt, injectPreview, previewFor } from '../../../netlify/edge-functions/apod-preview/preview';
+import { apodPost } from '../../services/__tests__/apodPost';
 
 const ORIGIN = 'https://apodgallery.netlify.app';
 const PAGE = `<!doctype html>
@@ -65,10 +66,9 @@ describe('link previews for shared days', () => {
 describe('the edge function for /apod/YYYY-MM-DD', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  /** The page as the function answers it when NASA answers `day`. */
-  async function served(day: unknown): Promise<string> {
-    vi.stubGlobal('Netlify', { env: { get: () => undefined } });
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(day))));
+  /** The page as the function answers it when APOD's site answers `day`. */
+  async function served(day: Partial<typeof pelican>): Promise<string> {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([apodPost({ ...pelican, ...day })]))));
     const response = await apodPreview(new Request(`${ORIGIN}/apod/2026-09-07`), {
       next: async () => new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8' } }),
     });
@@ -76,11 +76,13 @@ describe('the edge function for /apod/YYYY-MM-DD', () => {
   }
 
   it("writes the day's preview into the page", async () => {
-    expect(await served(pelican)).toContain('<meta property="og:title" content="The Pelican Nebula in Gas, Dust, and Stars" />');
+    const html = await served({});
+    expect(html).toContain('<meta property="og:title" content="The Pelican Nebula in Gas, Dust, and Stars" />');
+    expect(html).toContain(encodeURIComponent(pelican.url));
   });
 
-  it("leaves the page untouched when NASA answers with its placeholder record", async () => {
+  it("leaves the page untouched when the day is not one the app's contract accepts", async () => {
     const logo = 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png';
-    expect(await served({ ...pelican, title: 'NASA Science', url: logo, hdurl: logo })).toBe(PAGE);
+    expect(await served({ title: 'NASA Science', url: logo })).toBe(PAGE);
   });
 });
