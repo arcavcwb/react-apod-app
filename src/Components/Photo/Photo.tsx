@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BiExpandAlt } from 'react-icons/bi';
 import { ApodItem } from '../../contracts/apod.contract';
 import { useI18n } from '../../i18n/I18n';
 import { officialApodUrl } from '../../utils/date';
@@ -16,15 +17,17 @@ interface PhotoProps {
   sizes: string;
   /** object-position classes: where the picture sits inside its box. */
   position: string;
+  /** Given, a picture becomes the way to see it full screen; videos have their own. */
+  onZoom?: () => void;
 }
 
 /** The day's media, whole: never cropped, whatever its shape. Fills the box its parent sizes. */
-export const Photo: React.FC<PhotoProps> = ({ item, sizes, position }) => {
+export const Photo: React.FC<PhotoProps> = ({ item, sizes, position, onZoom }) => {
   const { t } = useI18n();
   const { url } = item;
 
   if (item.media_type === 'image' && url) {
-    return <DevelopingImage key={url} src={url} alt={item.title} sizes={sizes} position={position} />;
+    return <DevelopingImage key={url} src={url} alt={item.title} sizes={sizes} position={position} onZoom={onZoom} />;
   }
   if (item.media_type === 'video' && url && isVideoFile(url)) {
     return <video src={url} controls playsInline preload="metadata" className={`h-full w-full object-contain ${position}`} />;
@@ -57,7 +60,13 @@ export const Photo: React.FC<PhotoProps> = ({ item, sizes, position }) => {
  * The small archive thumbnail (usually already cached) sits blurred in place while the
  * full image downloads, then the sharp image develops over it.
  */
-const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; position: string }> = ({ src, alt, sizes, position }) => {
+const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; position: string; onZoom?: () => void }> = ({
+  src,
+  alt,
+  sizes,
+  position,
+  onZoom,
+}) => {
   const { t } = useI18n();
   const [status, setStatus] = useState<'loading' | 'developing' | 'done' | 'error'>('loading');
   const [raw, setRaw] = useState(false);
@@ -129,6 +138,22 @@ const DevelopingImage: React.FC<{ src: string; alt: string; sizes: string; posit
           status === 'developing' ? 'animate-[develop_800ms_cubic-bezier(0.16,1,0.3,1)_both]' : ''
         }`}
       />
+      {onZoom && (
+        // The whole picture opens it; the mark in the corner says so where there is no pointer to hover with.
+        <button
+          type="button"
+          onClick={onZoom}
+          aria-label={t('image.zoom')}
+          className="group absolute inset-0 cursor-zoom-in rounded-[inherit] focus-visible:outline-offset-[-4px]"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute right-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-[rgb(3_7_18/0.72)] text-fg transition-transform duration-300 ease-out-expo group-hover:scale-110 lg:right-4 lg:top-4"
+          >
+            <BiExpandAlt className="h-4 w-4" />
+          </span>
+        </button>
+      )}
     </>
   );
 };

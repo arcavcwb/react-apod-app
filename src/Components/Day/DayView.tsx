@@ -67,11 +67,11 @@ export const DayView: React.FC<{ date: string }> = ({ date }) => {
     [navigate]
   );
 
-  // Left and right arrows walk the days, unless focus is in a form control.
+  // Left and right arrows walk the days, unless focus is in a form control or the photograph is open full screen.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-      if (e.target instanceof Element && e.target.closest('input, select, textarea, [contenteditable="true"]')) return;
+      if (e.target instanceof Element && e.target.closest('input, select, textarea, [contenteditable="true"], dialog')) return;
       if (e.key === 'ArrowLeft' && prev) travel(prev, 'prev');
       if (e.key === 'ArrowRight' && next) travel(next, 'next');
     };
@@ -83,7 +83,9 @@ export const DayView: React.FC<{ date: string }> = ({ date }) => {
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const swipe = {
     onPointerDown: (e: React.PointerEvent) => {
-      swipeStart.current = e.pointerType === 'touch' ? { x: e.clientX, y: e.clientY } : null;
+      // A swipe over the photograph open full screen is not a change of day.
+      const viewing = e.target instanceof Element && e.target.closest('dialog');
+      swipeStart.current = e.pointerType === 'touch' && !viewing ? { x: e.clientX, y: e.clientY } : null;
     },
     onPointerUp: (e: React.PointerEvent) => {
       const start = swipeStart.current;
