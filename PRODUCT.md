@@ -47,6 +47,7 @@ The official APOD site is a 1995-era HTML page in English only. This app present
 - The credit is what APOD's page gives in its credit row, for copyrighted and public-domain pictures alike; it is absent when the page has none and never invented.
 - No heavy Three.js scene for decoration; space atmosphere must stay light and never compete with the photograph (user brief, 2026-09-11, superseding the earlier decision to keep the 3D orrery below the home picture).
 - Share is a first-class action: Web Share API where available, otherwise copy link (with visible confirmation) and the existing network links.
+- A picture opens full screen from the day and from the home: a click on it shows it whole over the darkened page, and Escape, the close button or another click returns (user decision, 2026-10-09). Videos keep their own player.
 
 ## Brand Commitments
 
