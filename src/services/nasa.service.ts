@@ -1,17 +1,14 @@
 import { ApodItem, ApodItemSchema, ApodListSchema } from '../contracts/apod.contract';
 import { apodToday, monthOf, monthRange, shiftDay } from '../utils/date';
 
-const API_URL = 'https://api.nasa.gov/planetary/apod';
+// The app's own endpoint (netlify/edge-functions/apod), which reads the days from APOD's official site.
+const API_URL = '/api/apod';
 const TIMEOUT_MS = 15_000;
 const HOUR_MS = 3_600_000;
 const CACHE_PREFIX = 'apod:v4:';
 
 export type ApodErrorKind = 'rate-limit' | 'not-found' | 'network' | 'contract';
 export type ApodResult<T> = { data: T; error: null } | { data: null; error: ApodErrorKind };
-
-function apiKey(): string {
-  return import.meta.env.VITE_NASA_API_KEY?.trim() || 'DEMO_KEY';
-}
 
 // ---------------------------------------------------------------------------
 // localStorage cache. Past days and past months never change, so they are kept
@@ -69,9 +66,7 @@ export const peekLatest = () => peekDay(apodToday()) ?? readCache<ApodItem>('lat
 // HTTP
 // ---------------------------------------------------------------------------
 async function request(params: Record<string, string>): Promise<ApodResult<unknown>> {
-  const url = new URL(API_URL);
-  url.searchParams.set('api_key', apiKey());
-  url.searchParams.set('thumbs', 'true');
+  const url = new URL(API_URL, window.location.origin);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
   let response: Response;
@@ -81,7 +76,7 @@ async function request(params: Record<string, string>): Promise<ApodResult<unkno
     return { data: null, error: 'network' };
   }
   if (response.status === 429) return { data: null, error: 'rate-limit' };
-  // The API answers 400 for dates outside the archive and 404 for days without a picture.
+  // The endpoint answers 400 for dates outside the archive and 404 for days without a picture.
   if (response.status === 400 || response.status === 404) return { data: null, error: 'not-found' };
   if (!response.ok) return { data: null, error: 'network' };
 
@@ -92,7 +87,7 @@ async function request(params: Record<string, string>): Promise<ApodResult<unkno
   }
 }
 
-/** Latest published picture. NASA may not have published "today" yet, so no date is sent. */
+/** Latest published picture. APOD may not have published "today" yet, so no date is sent. */
 export async function fetchLatestApod(): Promise<ApodResult<ApodItem>> {
   const today = apodToday();
   const cached = peekLatest();
@@ -128,7 +123,7 @@ export async function fetchApodByDate(date: string): Promise<ApodResult<ApodItem
 
 async function fetchRange(params: Record<string, string>): Promise<ApodResult<ApodItem[]>> {
   let res = await request(params);
-  // NASA's range endpoint is slow and flaky; one retry absorbs most timeouts and 5xx.
+  // A range is read from NASA's site in one go and can be slow; one retry absorbs most timeouts and 5xx.
   if (res.error === 'network') res = await request(params);
   if (res.error) return res;
   const parsed = ApodListSchema.safeParse(res.data);
@@ -148,7 +143,7 @@ export async function fetchRecentApods(): Promise<ApodResult<ApodItem[]>> {
   const cached = peekRecent();
   if (cached) return { data: cached, error: null };
 
-  // No end_date: NASA stops at its latest published day.
+  // No end_date: the range stops at the latest published day.
   const res = await fetchRange({ start_date: shiftDay(today, 1 - RECENT_DAYS) });
   if (res.error) return res;
   const items = [...res.data].sort((a, b) => b.date.localeCompare(a.date));
@@ -159,8 +154,8 @@ export async function fetchRecentApods(): Promise<ApodResult<ApodItem[]>> {
 
 /**
  * Every picture of a month; also fills the per-day cache.
- * NASA answers a whole month in 5 to 40 seconds but a week in about 2, so the month is
- * fetched as parallel weeks and `onProgress` receives each week as it lands.
+ * A week is answered sooner than a month, so the month is fetched as parallel weeks and
+ * `onProgress` receives each week as it lands.
  */
 export async function fetchApodMonth(
   month: string,
@@ -176,7 +171,7 @@ export async function fetchApodMonth(
   for (let day = Number(start.slice(8)); day <= Number(end.slice(8)); day += 7) {
     const last = Math.min(day + 6, Number(end.slice(8)));
     const chunk = { start_date: `${month}-${String(day).padStart(2, '0')}`, end_date: `${month}-${String(last).padStart(2, '0')}` };
-    // The week that reaches today leaves end_date out, so NASA stops at its latest published day.
+    // The week that reaches today leaves end_date out, so it stops at the latest published day.
     chunks.push(isCurrent && last === Number(end.slice(8)) ? { start_date: chunk.start_date } : chunk);
   }
 

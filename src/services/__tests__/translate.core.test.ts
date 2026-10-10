@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { statusFor, translateExplanation } from '../../../netlify/edge-functions/translate/core';
+import { apodPost } from './apodPost';
 
 const TODAY = '2026-09-11';
 const day = {
@@ -11,23 +12,25 @@ const day = {
 };
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+/** APOD's official site answering one day. */
+const posts = (made: Partial<typeof day> = {}) => json([apodPost({ ...day, ...made })]);
 const translated = (text: string) => json({ translations: [{ detected_source_language: 'EN', text }] });
 
-/** NASA answers `nasa`; anything else (DeepL) answers `deepl`. */
+/** NASA's site answers `nasa`; anything else (DeepL) answers `deepl`. */
 function fakeFetch(nasa: () => Response, deepl: () => Response = () => json({}, 500)) {
-  return vi.fn(async (input: string, _init?: RequestInit) => (input.startsWith('https://api.nasa.gov/') ? nasa() : deepl()));
+  return vi.fn(async (input: string, _init?: RequestInit) => (input.startsWith('https://science.nasa.gov/') ? nasa() : deepl()));
 }
 
 describe('translating an explanation', () => {
   it('translates the explanation, not the title, from NASA\'s own text', async () => {
-    const fetch = fakeFetch(() => json(day), () => translated('La nebulosa del Pelícano se transforma lentamente.'));
-    const result = await translateExplanation('2026-09-07', 'es', { fetch, deeplKey: 'secret:fx', nasaKey: 'nasa', today: TODAY });
+    const fetch = fakeFetch(() => posts(), () => translated('La nebulosa del Pelícano se transforma lentamente.'));
+    const result = await translateExplanation('2026-09-07', 'es', { fetch, deeplKey: 'secret:fx', today: TODAY });
 
     expect(result).toEqual({
       ok: true,
       translation: { date: '2026-09-07', lang: 'es', text: 'La nebulosa del Pelícano se transforma lentamente.' },
     });
-    expect(fetch.mock.calls[0][0]).toBe('https://api.nasa.gov/planetary/apod?date=2026-09-07&api_key=nasa');
+    expect(fetch.mock.calls[0][0]).toMatch(/^https:\/\/science\.nasa\.gov\/wp-json\/wp\/v2\/image-article\?.*before=2026-09-07T/);
     const [url, init] = fetch.mock.calls[1];
     expect(url).toBe('https://api-free.deepl.com/v2/translate');
     expect((init?.headers as Record<string, string>).Authorization).toBe('DeepL-Auth-Key secret:fx');
@@ -35,7 +38,7 @@ describe('translating an explanation', () => {
   });
 
   it('asks for Brazilian Portuguese, on the paid host for a paid key', async () => {
-    const fetch = fakeFetch(() => json(day), () => translated('A Nebulosa do Pelicano está se transformando.'));
+    const fetch = fakeFetch(() => posts(), () => translated('A Nebulosa do Pelicano está se transformando.'));
     const result = await translateExplanation('2026-09-07', 'pt-BR', { fetch, deeplKey: 'secret', today: TODAY });
 
     expect(result.ok && result.translation.lang).toBe('pt-BR');
@@ -45,7 +48,7 @@ describe('translating an explanation', () => {
   });
 
   it('refuses other languages and dates outside the archive without asking anyone', async () => {
-    const fetch = fakeFetch(() => json(day));
+    const fetch = fakeFetch(() => posts());
     const deps = { fetch, deeplKey: 'secret:fx', today: TODAY };
 
     for (const [date, lang] of [
@@ -64,7 +67,7 @@ describe('translating an explanation', () => {
   });
 
   it('spends no requests when DeepL is not configured', async () => {
-    const fetch = fakeFetch(() => json(day));
+    const fetch = fakeFetch(() => posts());
     expect(await translateExplanation('2026-09-07', 'es', { fetch, deeplKey: '  ', today: TODAY })).toEqual({
       ok: false,
       error: 'not-configured',
@@ -76,12 +79,13 @@ describe('translating an explanation', () => {
     const run = (nasa: () => Response, deepl?: () => Response) =>
       translateExplanation('2026-09-07', 'es', { fetch: fakeFetch(nasa, deepl), deeplKey: 'secret:fx', today: TODAY });
 
-    expect(await run(() => json({ code: 404 }, 404))).toEqual({ ok: false, error: 'not-found' });
-    expect(await run(() => json({ ...day, explanation: '' }))).toEqual({ ok: false, error: 'not-found' });
-    expect(await run(() => json({ ...day, date: '2026-09-06' }))).toEqual({ ok: false, error: 'upstream' });
-    expect(await run(() => json(day), () => json({ message: 'Quota exceeded' }, 456))).toEqual({ ok: false, error: 'quota' });
-    expect(await run(() => json(day), () => json({ message: 'Wrong key' }, 403))).toEqual({ ok: false, error: 'not-configured' });
-    expect(await run(() => json(day), () => json({ translations: [] }))).toEqual({ ok: false, error: 'upstream' });
+    // APOD published nothing that day, or a day with nothing to read (an interactive one).
+    expect(await run(() => json([]))).toEqual({ ok: false, error: 'not-found' });
+    expect(await run(() => posts({ explanation: '' }))).toEqual({ ok: false, error: 'not-found' });
+    expect(await run(() => json({ code: 'internal_server_error' }, 500))).toEqual({ ok: false, error: 'upstream' });
+    expect(await run(() => posts(), () => json({ message: 'Quota exceeded' }, 456))).toEqual({ ok: false, error: 'quota' });
+    expect(await run(() => posts(), () => json({ message: 'Wrong key' }, 403))).toEqual({ ok: false, error: 'not-configured' });
+    expect(await run(() => posts(), () => json({ translations: [] }))).toEqual({ ok: false, error: 'upstream' });
     expect(
       await run(() => {
         throw new TypeError('offline');
@@ -91,9 +95,9 @@ describe('translating an explanation', () => {
     expect([statusFor('bad-request'), statusFor('not-found'), statusFor('quota'), statusFor('upstream')]).toEqual([400, 404, 503, 502]);
   });
 
-  it("does not translate NASA's placeholder record", async () => {
+  it("does not translate a day the app's contract rejects", async () => {
     const logo = 'https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png';
-    const fetch = fakeFetch(() => json({ ...day, title: 'NASA Science', url: logo, hdurl: logo }), () => translated('Otro texto.'));
+    const fetch = fakeFetch(() => posts({ title: 'NASA Science', url: logo }), () => translated('Otro texto.'));
 
     expect(await translateExplanation('2026-09-07', 'es', { fetch, deeplKey: 'secret:fx', today: TODAY })).toEqual({
       ok: false,
