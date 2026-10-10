@@ -3,7 +3,7 @@
 
 export const APOD_FIRST_DATE = '1995-06-16';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const MONTH_RE = /^\d{4}-\d{2}$/;
+const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 const DAY_MS = 86_400_000;
 
 const easternParts = new Intl.DateTimeFormat('en-CA', {

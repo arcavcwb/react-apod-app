@@ -43,6 +43,12 @@ describe('APOD dates', () => {
     expect(isValidMonth('2026-10', '2026-09-11')).toBe(false);
   });
 
+  it('accepts only real months', () => {
+    expect(isValidMonth('2025-12', '2026-09-11')).toBe(true);
+    expect(isValidMonth('2025-13', '2026-09-11')).toBe(false);
+    expect(isValidMonth('2025-00', '2026-09-11')).toBe(false);
+  });
+
   it('numbers days from the first APOD', () => {
     expect(dayNumber('1995-06-16')).toBe(1);
     expect(dayNumber('1995-06-17')).toBe(2);
