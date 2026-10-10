@@ -37,7 +37,7 @@ Without `VITE_NASA_API_KEY` the app uses NASA's `DEMO_KEY`, which is limited to 
 
 ## How it works
 
-- `src/contracts/apod.contract.ts`: every NASA response is validated with Zod before it reaches the UI.
+- `src/contracts/apod.contract.ts`: every NASA response is validated with Zod before it reaches the UI. NASA's placeholder record (its website's logo answered as a day) is rejected there, so it is never shown, cached, translated or shared.
 - `src/services/nasa.service.ts`: a month is fetched as parallel weekly ranges and reused for each of its days, and the home's recent days come from one short range; past days are cached in `localStorage` forever, today for an hour. Errors are reported as `rate-limit`, `not-found`, `network` or `contract`; the app never shows a substitute picture.
 - `src/utils/date.ts`: "today" is computed in US Eastern time, when NASA publishes.
 - `src/i18n/`: typed message dictionaries and `Intl` formatting, no i18n library.
