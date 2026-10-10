@@ -66,9 +66,9 @@ export function monthRange(month: string, today = apodToday()): { start: string;
   return { start, end: last > today ? today : last };
 }
 
-/** Official page for a day, e.g. https://apod.nasa.gov/apod/ap260911.html */
+/** Official page for a day, e.g. https://science.nasa.gov/apod/?date=260911 (it redirects to the day's article). */
 export function officialApodUrl(date: string): string {
-  return `https://apod.nasa.gov/apod/ap${date.slice(2).replace(/-/g, '')}.html`;
+  return `https://science.nasa.gov/apod/?date=${date.slice(2).replace(/-/g, '')}`;
 }
 
 /** Formats an APOD date without shifting it into the visitor's time zone. */

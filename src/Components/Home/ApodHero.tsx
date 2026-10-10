@@ -55,7 +55,7 @@ export const ApodHero: React.FC<ApodHeroProps> = ({ result, retry, children }) =
                 {t('error.retry')}
               </button>
             )}
-            <a href="https://apod.nasa.gov/apod/astropix.html" target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
+            <a href="https://science.nasa.gov/apod/" target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
               {t('error.official')}
             </a>
           </Notice>

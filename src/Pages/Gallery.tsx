@@ -13,7 +13,7 @@ import { markTravel } from '../utils/travel';
 import { APOD_FIRST_DATE, apodToday, formatApodDate, isValidMonth, monthOf, monthRange, shiftDay, shiftMonth } from '../utils/date';
 
 const FIRST_MONTH = monthOf(APOD_FIRST_DATE);
-const OFFICIAL_ARCHIVE = 'https://apod.nasa.gov/apod/archivepix.html';
+const OFFICIAL_ARCHIVE = 'https://science.nasa.gov/apod/archive/';
 const SIZES = '(min-width: 1280px) 16vw, (min-width: 1024px) 19vw, (min-width: 640px) 31vw, 48vw';
 // Intl gives "septiembre de 2026"; titles and select options start with a capital.
 const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase() + s.slice(1);

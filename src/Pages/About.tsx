@@ -7,8 +7,7 @@ import { useI18n } from '../i18n/I18n';
 import { MessageKey } from '../i18n/messages';
 
 const LINKS: { label: MessageKey; href: string }[] = [
-  { label: 'about.linkApod', href: 'https://apod.nasa.gov/apod/astropix.html' },
-  { label: 'about.linkApi', href: 'https://api.nasa.gov/' },
+  { label: 'about.linkApod', href: 'https://science.nasa.gov/apod/' },
   { label: 'about.linkCode', href: 'https://github.com/arcavcwb/react-apod-app' },
 ];
 

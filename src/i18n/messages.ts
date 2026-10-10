@@ -40,7 +40,7 @@ const es = {
   'image.retry': 'Reintentar',
 
   'error.rate-limit.title': 'La NASA pidió una pausa',
-  'error.rate-limit.body': 'Se agotó el cupo de consultas por hora. Prueba de nuevo en unos minutos o abre la página oficial.',
+  'error.rate-limit.body': 'Hay demasiadas consultas en este momento. Prueba de nuevo en unos minutos o abre la página oficial.',
   'error.network.title': 'Sin conexión con la NASA',
   'error.network.body': 'No pudimos llegar al servicio de APOD. Revisa tu conexión y vuelve a intentarlo.',
   'error.not-found.title': 'No hay imagen para esta fecha',
@@ -50,7 +50,7 @@ const es = {
   'error.invalid.title': 'Esa fecha no está en el archivo',
   'error.invalid.body': 'APOD empezó el 16 de junio de 1995. Elige un día entre esa fecha y hoy.',
   'error.retry': 'Reintentar',
-  'error.official': 'Abrir en apod.nasa.gov',
+  'error.official': 'Abrir en science.nasa.gov',
   'error.today': 'Ir a hoy',
 
   'share.copy': 'Copiar enlace',
@@ -78,10 +78,10 @@ const es = {
     'Astronomy Picture of the Day publica desde el 16 de junio de 1995 una imagen o un video del universo por día, con una explicación escrita por un astrónomo profesional. La crearon Robert Nemiroff y Jerry Bonnell, y hoy es un servicio de la NASA y de Michigan Technological University.',
   'about.projectTitle': 'Este proyecto',
   'about.projectBody':
-    'NASA APOD Explorer es un proyecto independiente, no afiliado a la NASA. Muestra el archivo completo con cada imagen entera, una dirección para cada día y cada mes, y una interfaz en español, inglés y portugués. Los títulos y las explicaciones aparecen tal como los publica la NASA, en inglés.',
+    'NASA APOD Explorer es un proyecto independiente, no afiliado a la NASA. Muestra el archivo completo con cada imagen entera, una dirección para cada día y cada mes, y una interfaz en español, inglés y portugués. Los títulos aparecen tal como los publica la NASA, en inglés; las explicaciones se traducen automáticamente al español y al portugués, y siempre lo dicen.',
   'about.creditsTitle': 'Créditos',
   'about.creditsBody':
-    'Cada imagen pertenece a sus autores, indicados junto a ella cuando la NASA los informa. Los datos llegan de la API abierta de la NASA.',
+    'Cada imagen pertenece a sus autores, indicados junto a ella cuando la NASA los informa. Los datos llegan del sitio oficial de APOD, en science.nasa.gov.',
   'about.techTitle': 'Cómo está hecho',
   'about.tech1': 'React 18, TypeScript estricto y Vite.',
   'about.tech2': 'Cada respuesta de la NASA se valida con un contrato Zod antes de mostrarse.',
@@ -89,7 +89,6 @@ const es = {
   'about.tech4': 'Las imágenes llegan redimensionadas por un CDN, en el formato más ligero que acepte el navegador.',
   'about.links': 'Enlaces',
   'about.linkApod': 'Sitio oficial de APOD',
-  'about.linkApi': 'API abierta de la NASA',
   'about.linkCode': 'Código fuente en GitHub',
 
   'notFound.title': 'Esta página no existe',
@@ -167,7 +166,7 @@ const en: Messages = {
   'image.retry': 'Try again',
 
   'error.rate-limit.title': 'NASA asked for a pause',
-  'error.rate-limit.body': 'The hourly request quota ran out. Try again in a few minutes or open the official page.',
+  'error.rate-limit.body': 'Too many requests right now. Try again in a few minutes or open the official page.',
   'error.network.title': 'Cannot reach NASA',
   'error.network.body': 'We could not reach the APOD service. Check your connection and try again.',
   'error.not-found.title': 'No picture for this date',
@@ -177,7 +176,7 @@ const en: Messages = {
   'error.invalid.title': 'That date is not in the archive',
   'error.invalid.body': 'APOD began on 16 June 1995. Pick a day between then and today.',
   'error.retry': 'Try again',
-  'error.official': 'Open on apod.nasa.gov',
+  'error.official': 'Open on science.nasa.gov',
   'error.today': 'Go to today',
 
   'share.copy': 'Copy link',
@@ -205,10 +204,10 @@ const en: Messages = {
     'Since 16 June 1995, Astronomy Picture of the Day has published one image or video of the universe per day, with an explanation written by a professional astronomer. Robert Nemiroff and Jerry Bonnell created it, and today it is a service of NASA and Michigan Technological University.',
   'about.projectTitle': 'This project',
   'about.projectBody':
-    'NASA APOD Explorer is an independent project, not affiliated with NASA. It shows the full archive with every picture uncropped, an address for every day and month, and an interface in Spanish, English and Portuguese. Titles and explanations appear exactly as NASA publishes them, in English.',
+    'NASA APOD Explorer is an independent project, not affiliated with NASA. It shows the full archive with every picture uncropped, an address for every day and month, and an interface in Spanish, English and Portuguese. Titles appear exactly as NASA publishes them, in English; explanations are machine-translated into Spanish and Portuguese, and always say so.',
   'about.creditsTitle': 'Credits',
   'about.creditsBody':
-    'Each picture belongs to its authors, named next to it when NASA provides them. Data comes from NASA’s open API.',
+    'Each picture belongs to its authors, named next to it when NASA provides them. Data comes from APOD’s official site, at science.nasa.gov.',
   'about.techTitle': 'How it is built',
   'about.tech1': 'React 18, strict TypeScript and Vite.',
   'about.tech2': 'Every NASA response is validated against a Zod contract before it is shown.',
@@ -216,7 +215,6 @@ const en: Messages = {
   'about.tech4': 'Images arrive resized by a CDN, in the lightest format the browser accepts.',
   'about.links': 'Links',
   'about.linkApod': 'Official APOD site',
-  'about.linkApi': 'NASA open APIs',
   'about.linkCode': 'Source code on GitHub',
 
   'notFound.title': 'This page does not exist',
@@ -291,7 +289,7 @@ const ptBR: Messages = {
   'image.retry': 'Tentar de novo',
 
   'error.rate-limit.title': 'A NASA pediu uma pausa',
-  'error.rate-limit.body': 'A cota de consultas por hora acabou. Tente de novo em alguns minutos ou abra a página oficial.',
+  'error.rate-limit.body': 'Há consultas demais neste momento. Tente de novo em alguns minutos ou abra a página oficial.',
   'error.network.title': 'Sem conexão com a NASA',
   'error.network.body': 'Não conseguimos acessar o serviço do APOD. Verifique sua conexão e tente de novo.',
   'error.not-found.title': 'Não há imagem para esta data',
@@ -301,7 +299,7 @@ const ptBR: Messages = {
   'error.invalid.title': 'Essa data não está no arquivo',
   'error.invalid.body': 'O APOD começou em 16 de junho de 1995. Escolha um dia entre essa data e hoje.',
   'error.retry': 'Tentar de novo',
-  'error.official': 'Abrir em apod.nasa.gov',
+  'error.official': 'Abrir em science.nasa.gov',
   'error.today': 'Ir para hoje',
 
   'share.copy': 'Copiar link',
@@ -329,10 +327,10 @@ const ptBR: Messages = {
     'Desde 16 de junho de 1995, o Astronomy Picture of the Day publica uma imagem ou um vídeo do universo por dia, com uma explicação escrita por um astrônomo profissional. Robert Nemiroff e Jerry Bonnell o criaram, e hoje ele é um serviço da NASA e da Michigan Technological University.',
   'about.projectTitle': 'Este projeto',
   'about.projectBody':
-    'O NASA APOD Explorer é um projeto independente, sem vínculo com a NASA. Ele mostra o arquivo completo com cada imagem inteira, um endereço para cada dia e cada mês, e uma interface em espanhol, inglês e português. Títulos e explicações aparecem exatamente como a NASA os publica, em inglês.',
+    'O NASA APOD Explorer é um projeto independente, sem vínculo com a NASA. Ele mostra o arquivo completo com cada imagem inteira, um endereço para cada dia e cada mês, e uma interface em espanhol, inglês e português. Os títulos aparecem exatamente como a NASA os publica, em inglês; as explicações são traduzidas automaticamente para o espanhol e o português, e sempre dizem isso.',
   'about.creditsTitle': 'Créditos',
   'about.creditsBody':
-    'Cada imagem pertence aos seus autores, indicados ao lado dela quando a NASA os informa. Os dados vêm da API aberta da NASA.',
+    'Cada imagem pertence aos seus autores, indicados ao lado dela quando a NASA os informa. Os dados vêm do site oficial do APOD, em science.nasa.gov.',
   'about.techTitle': 'Como foi feito',
   'about.tech1': 'React 18, TypeScript estrito e Vite.',
   'about.tech2': 'Cada resposta da NASA é validada por um contrato Zod antes de aparecer.',
@@ -340,7 +338,6 @@ const ptBR: Messages = {
   'about.tech4': 'As imagens chegam redimensionadas por uma CDN, no formato mais leve que o navegador aceitar.',
   'about.links': 'Links',
   'about.linkApod': 'Site oficial do APOD',
-  'about.linkApi': 'APIs abertas da NASA',
   'about.linkCode': 'Código-fonte no GitHub',
 
   'notFound.title': 'Esta página não existe',
